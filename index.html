@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Conversor - M&A Consultoria Câmbio</title>
+  <title>Conversor de Moedas - M&A Consultoria Câmbio</title>
 
   <!-- Tailwind CSS (CDN para desenvolvimento rápido) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -42,6 +42,9 @@
 
   <!-- HEADER -->
   <header class="hero py-16">
+    <a href="https://www.maconsultoriacambio.com.br/" class="absolute top-6 right-6 text-xs sm:text-sm font-medium text-gray-500 hover:text-[#d6c07a] transition-colors flex items-center gap-1 z-50">
+      Voltar para o site <i class="ph-bold ph-caret-right"></i>
+    </a>
     <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center gap-6">
       <div class="flex-1 flex items-center gap-5">
         <!-- Logo com efeito Glass -->
@@ -50,8 +53,8 @@
         </div>
         <div>
           <div class="text-lg font-semibold text-gold">M&A Consultoria Câmbio</div>
-          <div class="text-3xl md:text-4xl font-extrabold tracking-tight text-white">CONVERSOR DE MOEDAS</div>
-          <div class="text-xs text-gray-300 mt-1 tracking-wide">Garanta as melhores taxas em tempo real para sua viagem ou negócios</div>
+          <div class="text-3xl md:text-4xl font-extrabold tracking-tight text-white">CONVERSOR DE MOEDAS <i class="ph-bold ph-currency-circle-dollar text-lg"></i></div>
+          <div class="text-xs text-gray-300 mt-1 tracking-wide">Garanta com facilidade e em tempo real as melhores taxas para sua viagem ou negócios</div>
         </div>
       </div>
       <div class="flex-none">
@@ -66,8 +69,8 @@
 
       <!-- SEÇÃO 1: TIPO DE OPERAÇÃO & LISTA -->
       <section class="lg:col-span-1 glass rounded-2xl p-6 card-hover border border-gray-100">
-        <h3 class="text-xl font-bold text-gray-800 mb-1">Tipo de Operação</h3>
-        <p class="text-xs text-gray-500 mb-4">Escolha entre Papel Moeda ou Cartão pré-pago</p>
+        <h3 class="text-xl font-bold text-gray-800 mb-1">Tipo de Operação (Compra)</h3>
+        <p class="text-xs text-gray-500 mb-4">Escolha entre Papel Moeda ou Cartão Pré-pago</p>
 
         <div class="flex items-center gap-3 mb-5">
           <button id="btnPapel" class="flex-1 px-4 py-2 rounded-lg border font-semibold text-gray-500 text-sm transition-all flex items-center justify-center gap-2">
@@ -175,22 +178,43 @@
 
   <!-- FOOTER -->
   <footer class="bg-[#2b2a2c] text-white mt-12 py-8 border-t border-[#d6c07a]">
-    <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-      <div class="text-center md:text-left">
-        <div class="text-sm font-bold text-[#d6c07a] mb-1">M&A CONSULTORIA CÂMBIO</div>
-        <div class="text-xs text-gray-400">Soluções completas em câmbio turismo e comercial</div>
+    <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-4">
+
+      <div class="text-center md:text-left w-full md:w-auto">
+        <div class="text-sm font-bold text-[#d6c07a] mb-1 flex items-center justify-center md:justify-start gap-2">
+          <i class="ph-bold ph-currency-circle-dollar text-lg"></i>
+          <span>M&A CONSULTORIA CÂMBIO</span>
+        </div>
+        <div class="text-[10px] text-gray-400 uppercase tracking-wider">Soluções completas em câmbio turismo e comercial</div>
       </div>
 
-      <div class="flex gap-6 text-xs text-gray-400">
-        <a href="#" class="hover:text-[#d6c07a] transition-colors">Termos de Uso</a>
-        <a href="#" class="hover:text-[#d6c07a] transition-colors">Política de Privacidade</a>
-        <a href="#" class="hover:text-[#d6c07a] transition-colors">Fale Conosco</a>
+      <div class="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-gray-400 font-medium w-full md:w-auto">
+        <button onclick="openInfoModal('termsModal')" class="hover:text-[#d6c07a] transition-colors hover:underline underline-offset-4">
+          Termos de Uso
+        </button>
+        <button onclick="openInfoModal('privacyModal')" class="hover:text-[#d6c07a] transition-colors hover:underline underline-offset-4">
+          Privacidade
+        </button>
+        <button onclick="openInfoModal('contactModal')" class="hover:text-[#d6c07a] transition-colors hover:underline underline-offset-4">
+          Fale Conosco
+        </button>
       </div>
 
-      <div class="text-xs text-gray-500 text-center md:text-right">
-        &copy; 2025 M&A Consultoria. Todos os direitos reservados.<br>
-        <span class="text-[10px]">Valores sujeitos a alteração até o fechamento efetivo da operação</span>
+      <div class="text-center md:text-right w-full md:w-auto space-y-1">
+        <div class="text-[10px] text-gray-500 leading-tight">
+          &copy; 2025 M&A Consultoria Câmbio.<br class="sm:hidden"> Todos os direitos reservados.
+        </div>
+
+        <!--   <div class="text-[10px] text-gray-500 leading-tight">*Valores sujeitos a alteração até o fechamento efetivo da operação</div>-->
+
+        <div class="text-[10px] text-gray-600 flex items-center justify-center md:justify-end gap-1">
+          <i class="ph-bold ph-code"></i> Dev by
+          <a href="https://bio.site/lucascode" target="_blank" class="text-gray-500 hover:text-[#d6c07a] transition-colors font-semibold border-b border-transparent hover:border-[#d6c07a]">
+            Lucas Code
+          </a>
+        </div>
       </div>
+
     </div>
   </footer>
 
@@ -332,18 +356,23 @@
               </div>
 
               <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <i class="ph-bold ph-file-arrow-up"></i> Documento (Foto ou PDF)
+                <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <i class="ph-bold ph-identification-card"></i> Envio do Documento
                 </h4>
-                <div class="flex items-center justify-center w-full">
-                  <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                      <i class="ph-bold ph-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
-                      <p class="text-sm text-gray-500"><span class="font-semibold">Clique para enviar</span> CNH ou RG/RNE (Frente/Verso)</p>
-                      <p class="text-xs text-gray-500 mt-1">PDF, JPG ou PNG (até 50kb)</p>
-                    </div>
-                    <input id="dropzone-file" type="file" class="hidden" required />
-                  </label>
+
+                <div class="bg-[#fffdf5] border border-[#d6c07a]/30 rounded-lg p-4 flex flex-col items-center text-center gap-3">
+                  <div class="w-12 h-12 rounded-full bg-[#d6c07a]/10 flex items-center justify-center text-[#d6c07a] mb-1">
+                    <i class="ph-bold ph-whatsapp-logo text-2xl"></i>
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-gray-800 text-sm mb-1">Envio Simplificado</h5>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                      Para agilizar sua aprovação e garantir a segurança dos seus dados, você enviará sua CNH ou RG/RNE diretamente para nosso especialista pelo <strong>WhatsApp</strong> ou <strong>E-mail</strong> logo após confirmar esta solicitação.
+                    </p>
+                  </div>
+                  <div class="text-[10px] font-bold text-[#d6c07a] uppercase tracking-wide border-t border-[#d6c07a]/20 pt-2 w-full mt-1">
+                    Não é necessário anexar nada agora. Basta seguir as instruções após a confirmação.
+                  </div>
                 </div>
               </div>
 
@@ -352,23 +381,150 @@
               </button>
             </form>
 
-            <div id="successStep" class="hidden text-center py-10">
-              <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 mb-6 animate-bounce">
+            <div id="successStep" class="hidden text-center py-8">
+
+              <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 mb-5 animate-bounce">
                 <i class="ph-fill ph-check-circle text-5xl text-green-600"></i>
               </div>
+
               <h3 class="text-2xl font-bold leading-6 text-gray-900 mb-2">Solicitação de Câmbio Recebida!</h3>
-              <p class="text-sm text-gray-500 max-w-xs mx-auto">Enviamos todos os detalhes da operação para seu e-mail.</p>
+              <p class="text-sm text-gray-500 max-w-xs mx-auto mb-8">
+                Enviamos todos os detalhes de sua operação para seu e-mail
+              </p>
 
-              <div class="mt-8 p-4 bg-[#fffdf5] border border-[#d6c07a]/30 rounded-lg mx-auto max-w-sm">
-                <p class="text-xs text-[#d6c07a] font-bold uppercase mb-2">Próximo Passo</p>
-                <p class="text-sm text-gray-700 mb-4">Para finalizar a compra de sua operação com segurança e combinar a entrega ou retirada, fale agora com um de nossos especialistas!</p>
+              <div class="bg-[#fffdf5] border border-[#d6c07a]/40 rounded-xl p-6 mx-auto max-w-sm shadow-sm relative">
 
-                <button id="finalWhatsAppBtn" class="w-full py-4 rounded-xl font-bold text-white shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 bg-[#128C7E] hover:bg-[#075E54] ">
-                  <i class="ph-bold ph-whatsapp-logo text-2xl"></i> Falar com Especialista
+                <p class="text-xs text-[#d6c07a] font-bold uppercase tracking-wider mb-2 flex items-center justify-center gap-1">
+                  <i class="ph-bold ph-clock"></i> Próximo Passo
+                </p>
+
+                <p class="text-base text-gray-800 mb-5 font-medium leading-snug">
+                  Para finalizar a compra de sua operação com segurança e combinar a entrega ou retirada, fale agora com um de nossos especialistas!
+                </p>
+
+                <button id="finalWhatsAppBtn" class="w-full group h-14 px-6 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 mb-5">
+                  <i class="ph-bold ph-whatsapp-logo text-2xl"></i>
+                  Falar com Especialista
                 </button>
+
+                <div class="border-t border-dashed border-[#d6c07a]/30 pt-4 text-left">
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#d6c07a] shrink-0 shadow-sm">
+                      <i class="ph-bold ph-identification-card text-lg"></i>
+                    </div>
+                    <div class="text-xs text-gray-600 leading-relaxed">
+                      <span class="block font-bold text-gray-800 mb-0.5">Lembrete:</span>
+                      Ao chamar, envie também a foto do seu <strong>RG/RNE ou CNH</strong> na conversa. Ou se preferir, envie ao E-mail (conversor@maconsultoriacambio.com.br).
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
 
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="termsModal" class="fixed inset-0 z-[60] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/90 transition-opacity backdrop-blur-sm" onclick="closeInfoModal('termsModal')"></div>
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border-t-4 border-[#d6c07a]">
+          <div class="bg-white px-6 py-6">
+            <h3 class="text-lg font-bold leading-6 text-gray-900 mb-4 flex items-center gap-2">
+              <i class="ph-bold ph-file-text text-[#d6c07a]"></i> Termos de Uso
+            </h3>
+            <div class="mt-2 text-sm text-gray-600 space-y-3 text-justify leading-relaxed">
+              <p><strong>1. Caráter Informativo:</strong> As cotações exibidas neste simulador são baseadas no mercado atual, mas possuem caráter informativo. O valor final pode sofrer alterações até o momento da confirmação com nosso atendente.</p>
+              <p><strong>2. Conclusão do Pedido:</strong> A simples simulação não garante a reserva da moeda. Os pedidos só são efetivados após o contato via WhatsApp, envio da documentação necessária, validação de cadastro e confirmação do pagamento.</p>
+              <p><strong>3. Responsabilidade:</strong> O usuário é inteiramente responsável pela veracidade das informações e documentos fornecidos. O uso deste site para fins ilícitos ou envio de dados falsos é estritamente proibido.</p>
+              <p><strong>4. Atualizações:</strong> A M&A Consultoria Câmbio se reserva o direito de atualizar estes termos e as taxas aplicadas a qualquer momento.</p>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-6 py-3 flex flex-row-reverse">
+            <button type="button" class="w-full sm:w-auto inline-flex justify-center rounded-lg bg-[#2b2a2c] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black transition-all" onclick="closeInfoModal('termsModal')">Entendi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="privacyModal" class="fixed inset-0 z-[60] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/90 transition-opacity backdrop-blur-sm" onclick="closeInfoModal('privacyModal')"></div>
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border-t-4 border-[#d6c07a]">
+          <div class="bg-white px-6 py-6">
+            <h3 class="text-lg font-bold leading-6 text-gray-900 mb-4 flex items-center gap-2">
+              <i class="ph-bold ph-shield-check text-[#d6c07a]"></i> Política de Privacidade
+            </h3>
+            <div class="mt-2 text-sm text-gray-600 space-y-3 text-justify leading-relaxed">
+              <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-800 text-xs font-semibold mb-3">
+                <i class="ph-bold ph-info"></i> Resumo LGPD: Seus dados estão seguros conosco
+              </div>
+              <p><strong>Coleta de Dados:</strong> Coletamos apenas o estritamente necessário para a operação de câmbio turismo (Nome, Telefone, E-mail, Endereço e Documentos como RG/RNE/CPF/Passaporte).</p>
+              <p><strong>Finalidade:</strong> Seus dados são utilizados exclusivamente para cotações, operações de câmbio e cumprimento das exigências legais do Banco Central (Bacen).</p>
+              <p><strong>Segurança:</strong> Não vendemos nem compartilhamos seus dados com terceiros. Armazenamos as informações em ambiente seguro, apenas pelo tempo necessário.</p>
+              <p><strong>Seus Direitos:</strong> Você pode solicitar o acesso, correção ou exclusão dos seus dados a qualquer momento entrando em contato conosco.</p>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-6 py-3 flex flex-row-reverse">
+            <button type="button" class="w-full sm:w-auto inline-flex justify-center rounded-lg bg-[#2b2a2c] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black transition-all" onclick="closeInfoModal('privacyModal')">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="contactModal" class="fixed inset-0 z-[60] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/90 transition-opacity backdrop-blur-sm" onclick="closeInfoModal('contactModal')"></div>
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border-t-4 border-[#d6c07a]">
+          <div class="bg-white px-6 py-6 text-center">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#fffdf5] mb-4 shadow-sm">
+              <i class="ph-bold ph-chats text-2xl text-[#d6c07a]"></i>
+            </div>
+            <h3 class="text-xl font-bold leading-6 text-gray-900 mb-2">Fale Conosco</h3>
+            <p class="text-sm text-gray-500 mb-6">Precisa de ajuda, cotação especial ou suporte?</p>
+
+            <div class="space-y-3">
+              <a href="https://wa.me/5511953505626" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#25D366] hover:bg-green-50 transition-all group">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-colors">
+                  <i class="ph-bold ph-whatsapp-logo text-xl"></i>
+                </div>
+                <div class="text-left">
+                  <p class="text-xs text-gray-500">Operador</p>
+                  <p class="text-sm font-bold text-gray-800">(11) 95350-5626</p>
+                </div>
+              </a>
+
+              <a href="https://wa.me/5511938059556" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#25D366] hover:bg-green-50 transition-all group">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-colors">
+                  <i class="ph-bold ph-whatsapp-logo text-xl"></i>
+                </div>
+                <div class="text-left">
+                  <p class="text-xs text-gray-500">Operador</p>
+                  <p class="text-sm font-bold text-gray-800">(11) 93805-9556</p>
+                </div>
+              </a>
+
+              <a href="mailto:contato@maconsultoriacambio.com.br" class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#d6c07a] hover:bg-[#fffdf5] transition-all group">
+                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-[#d6c07a] group-hover:text-white transition-colors">
+                  <i class="ph-bold ph-envelope-simple text-xl"></i>
+                </div>
+                <div class="text-left">
+                  <p class="text-xs text-gray-500">E-mail</p>
+                  <p class="text-sm font-bold text-gray-800">contato@maconsultoriacambio.com.br</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-6 py-3 flex flex-row-reverse">
+            <button type="button" class="w-full sm:w-auto inline-flex justify-center rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-300 transition-all" onclick="closeInfoModal('contactModal')">Fechar</button>
           </div>
         </div>
       </div>
