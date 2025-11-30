@@ -642,7 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
     if (operationalInfo) {
-      operationalInfo.innerHTML = `<div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2 text-justify"><p class="font-bold text-gray-700 mb-1 flex items-center gap-1"><i class="ph-bold ph-info"></i> Informações Importantes:</p><p>1. O <strong>VET (Valor Efetivo Total)</strong> representa o custo final, incluindo câmbio, impostos (IOF) e tarifas.</p><p>2. A operação está sujeita a confirmação de dados e disponibilidade de estoque.</p><p>3. É obrigatório o envio de documento válido (RG, RNE ou CNH) para seguir com a operação.</p><p>4. Valores/taxas sujeitos a alteração até o fechamento efetivo da operação com um de nossos operadores.</p><p>5. Câmbio Delivery: independente do tipo de operação (Papel-moeda ou Cartão Pré-pago), há uma tarifa de 30 reais para entregas abaixo de USD 500,00 (ou equivalente em outras moedas).</p></div>`;
+      operationalInfo.innerHTML = `<div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2 text-justify"><p class="font-bold text-gray-700 mb-1 flex items-center gap-1"><i class="ph-bold ph-info"></i> Informações Importantes:</p><p>1. O VET (Valor Efetivo Total) representa o custo final, incluindo câmbio, impostos (IOF) e tarifas.</p><p>2. A operação está sujeita a disponibilidade de estoque e validação de dados e documento de identificação (é obrigatório o envio de documento válido (RG, RNE ou CNH).</p><p>3. Valores/taxas sujeitos a alteração até o fechamento efetivo da operação com um de nossos operadores.</p><p>4. Câmbio Delivery: Gratuito para operações de compra de Papel-Moeda ou Cartão acima de USD 500,00 (ou equivalente em outra moeda). Para valores menores, a taxa é de R$ 30,00.</p></div>`;
     }
     budgetForm.classList.remove("hidden");
     successStep.classList.add("hidden");
@@ -832,3 +832,22 @@ document.addEventListener("keydown", function (event) {
     closeInfoModal("contactModal");
   }
 });
+
+// ---------- LÓGICA DO FAQ (ACCORDION) ----------
+function toggleFaq(button) {
+  // Pega o conteúdo (a div logo abaixo do botão)
+  const content = button.nextElementSibling;
+  // Pega o ícone da seta
+  const icon = button.querySelector("i");
+
+  // Alterna a visibilidade
+  if (content.classList.contains("hidden")) {
+    content.classList.remove("hidden");
+    content.classList.add("block"); // Garante display block
+    icon.style.transform = "rotate(180deg)"; // Gira a seta para cima
+  } else {
+    content.classList.add("hidden");
+    content.classList.remove("block");
+    icon.style.transform = "rotate(0deg)"; // Gira a seta para baixo
+  }
+}
