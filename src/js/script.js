@@ -621,7 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
       newBtn.onclick = (e) => {
         e.preventDefault();
         alert(
-          "Nosso cConversor de Moedas funciona apenas de Segunda (09h30) a Sexta (18h). Por favor, retorne no horário indicado para finalizar sua solicitação de câmbio com segurança!"
+          "Nosso Conversor de Moedas funciona apenas de Segunda-feira às 09h30 até Sexta-feira às 18h. Por favor, retorne no horário indicado para finalizar sua solicitação de câmbio com segurança!"
         );
       };
 
