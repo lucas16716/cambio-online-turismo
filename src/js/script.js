@@ -614,20 +614,17 @@ document.addEventListener("DOMContentLoaded", () => {
     btnSolicitar.parentNode.replaceChild(newBtn, btnSolicitar);
 
     if (!isOpen) {
-      // MODO FECHADO: Muda a cor e mostra alerta ao clicar
       newBtn.className =
         "group mt-4 w-full h-14 px-4 rounded-xl bg-gray-400 cursor-not-allowed text-white font-bold text-lg shadow-none flex items-center justify-center gap-2";
-      newBtn.innerHTML = `<i class="ph-bold ph-clock-afternoon"></i> Atendimento Encerrado (Volta Seg. 06h)`;
+      newBtn.innerHTML = `<i class="ph-bold ph-clock-afternoon"></i> Atendimento Encerrado (Volta Seg. 09h30)`;
 
       newBtn.onclick = (e) => {
         e.preventDefault();
-        // Alerta visual simples
         alert(
-          "Nosso atendimento é de Segunda (06h) a Sexta (19h). Por favor, retorne no horário comercial para finalizar sua solicitação com segurança!"
+          "Nosso cConversor de Moedas funciona apenas de Segunda (09h30) a Sexta (18h). Por favor, retorne no horário indicado para finalizar sua solicitação de câmbio com segurança!"
         );
       };
 
-      // Adiciona um aviso visual abaixo do botão também
       let warningBox = document.getElementById("closedWarning");
       if (!warningBox) {
         warningBox = document.createElement("div");
@@ -635,12 +632,10 @@ document.addEventListener("DOMContentLoaded", () => {
         warningBox.className =
           "mt-3 text-center text-xs text-red-500 font-medium bg-red-50 p-2 rounded border border-red-100";
         warningBox.innerHTML =
-          "O mercado está fechado. Você pode simular, mas as solicitações só abrem em horário comercial.";
+          "O mercado está fechado. Você pode simular, mas as solicitações só abrem no horário indicado.";
         newBtn.parentNode.appendChild(warningBox);
       }
     } else {
-      // MODO ABERTO: Botão Dourado Normal
-      // Remove aviso se existir
       const oldWarning = document.getElementById("closedWarning");
       if (oldWarning) oldWarning.remove();
 
