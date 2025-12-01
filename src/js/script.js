@@ -1,6 +1,3 @@
-// ARQUIVO: script.js
-// VERSÃO: FINAL - AUTO-UPDATE VISUAL COMPLETO
-
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🟢 Script iniciado. DOM carregado.");
 
@@ -31,12 +28,19 @@ document.addEventListener("DOMContentLoaded", () => {
     CLP: { minStep: 20000, notes: "20.000" },
     MXN: { minStep: 200, notes: "200" },
     UYU: { minStep: 1000, notes: "1.000" },
+    NZD: { minStep: 100, notes: "100" },
     AED: { isExotic: true, name: "Dirham (AED)" },
     CNY: { isExotic: true, name: "Iuan (CNY)" },
     PEN: { isExotic: true, name: "Novo Sol (PEN)" },
     ARS: { isExotic: true, name: "Peso Argentino (ARS)" },
     COP: { isExotic: true, name: "Peso Colombiano (COP)" },
     ZAR: { isExotic: true, name: "Rand (ZAR)" },
+  };
+
+  // ---------- REGRAS CARTÃO PRÉ-PAGO ----------
+  const CARD_RULES = {
+    MIN_NEW_USD: 100,
+    MIN_RELOAD_USD: 50,
   };
 
   // ---------- SELETORES ----------
@@ -230,15 +234,11 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => dataStatus.classList.add("hidden"), 1500);
       }
 
-      // --- CORREÇÃO VISUAL AQUI ---
-      // 1. Atualiza a referência de 'available' com os novos dados
       if (currentMode) {
         available = currentMode === "papel" ? ratesPapel : ratesCartao;
-        // 2. Redesenha a lista de botões (moedas) com os novos valores unitários
         populateCurrencyList();
       }
 
-      // 3. Atualiza o Card de Resultado (se estiver aberto)
       if (resultCard && !resultCard.classList.contains("hidden")) {
         console.log("🔄 Recalculando valores na tela com novas taxas...");
         updateDisplayConversion();
@@ -317,6 +317,25 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // ---------- VERIFICAÇÃO DE HORÁRIO COMERCIAL ----------
+  function isMarketOpen() {
+    // Horário: Segunda (06h) até Sexta (19h)
+    const now = new Date();
+    const day = now.getDay(); // 0=Dom, 1=Seg, ..., 6=Sáb
+    const hour = now.getHours();
+
+    // Bloqueia Fim de Semana
+    if (day === 0 || day === 6) return false;
+
+    // Bloqueia Segunda antes das 06:00
+    if (day === 1 && hour < 6) return false;
+
+    // Bloqueia Sexta depois das 19:00
+    if (day === 5 && hour >= 19) return false;
+
+    return true;
+  }
+
   function validatePaperAmount(currency, amount) {
     if (currentMode !== "papel") return { valid: true };
     const rule = PAPER_RULES[currency];
@@ -327,6 +346,34 @@ document.addEventListener("DOMContentLoaded", () => {
         msg: `Para ${currency} em Papel, o valor deve ser múltiplo de ${rule.minStep}. (Notas disponíveis: ${rule.notes})`,
       };
     return { valid: true };
+  }
+
+  function validateCardAmount(currency, amount) {
+    if (currentMode !== "cartao") return { valid: true };
+    if (!ratesCartao["USD"] || !ratesCartao[currency]) return { valid: true };
+    const rateUSD = ratesCartao["USD"].raw;
+    const rateTarget = ratesCartao[currency].raw;
+    const minReloadTarget = (CARD_RULES.MIN_RELOAD_USD * rateUSD) / rateTarget;
+    const minNewTarget = (CARD_RULES.MIN_NEW_USD * rateUSD) / rateTarget;
+    const minReloadDisplay = minReloadTarget.toFixed(2);
+    const minNewDisplay = minNewTarget.toFixed(2);
+
+    if (amount < minReloadTarget) {
+      return {
+        valid: false,
+        msg: `O valor mínimo para recarga é de USD ${CARD_RULES.MIN_RELOAD_USD} (aprox. ${currency} ${minReloadDisplay}).`,
+      };
+    }
+
+    if (amount >= minReloadTarget && amount < minNewTarget) {
+      return {
+        valid: true,
+        isReloadOnly: true,
+        warningMsg: `Atenção: Valores abaixo de USD ${CARD_RULES.MIN_NEW_USD} (aprox. ${currency} ${minNewDisplay}) são permitidos apenas para RECARGA de cartão existente.`,
+      };
+    }
+
+    return { valid: true, isReloadOnly: false };
   }
 
   function updateInputHelper() {
@@ -510,6 +557,20 @@ document.addEventListener("DOMContentLoaded", () => {
       resultCard.classList.add("hidden");
       return;
     }
+    const cardValidation = validateCardAmount(from, amount);
+    if (!cardValidation.valid) {
+      showError(cardValidation.msg);
+      resultCard.classList.add("hidden");
+      return;
+    }
+    if (cardValidation.isReloadOnly) {
+      const warningDiv = document.getElementById("errorMsg");
+      warningDiv.innerHTML = `<i class="ph-bold ph-warning"></i> ${cardValidation.warningMsg}`;
+      warningDiv.className =
+        "text-orange-600 text-sm mt-3 font-medium bg-orange-50 p-2 rounded border border-orange-100 fade-in block";
+    } else {
+      document.getElementById("errorMsg").classList.add("hidden");
+    }
     const res = calculateConversion(currentMode, from, amount);
     currentQuote = res;
     resultCard.classList.remove("hidden");
@@ -539,6 +600,57 @@ document.addEventListener("DOMContentLoaded", () => {
       )}</span></div>`;
     }
     updateComparison(from, amount);
+
+    const isOpen = isMarketOpen();
+    const btnSolicitar = document.getElementById("buyBtn");
+
+    // Removemos qualquer clone anterior para garantir
+    const newBtn = btnSolicitar.cloneNode(true);
+    btnSolicitar.parentNode.replaceChild(newBtn, btnSolicitar);
+
+    if (!isOpen) {
+      // MODO FECHADO: Muda a cor e mostra alerta ao clicar
+      newBtn.className =
+        "group mt-4 w-full h-14 px-4 rounded-xl bg-gray-400 cursor-not-allowed text-white font-bold text-lg shadow-none flex items-center justify-center gap-2";
+      newBtn.innerHTML = `<i class="ph-bold ph-clock-afternoon"></i> Atendimento Encerrado (Volta Seg. 06h)`;
+
+      newBtn.onclick = (e) => {
+        e.preventDefault();
+        // Alerta visual simples
+        alert(
+          "Nosso atendimento é de Segunda (06h) a Sexta (19h). Por favor, retorne no horário comercial para finalizar sua solicitação com segurança!"
+        );
+      };
+
+      // Adiciona um aviso visual abaixo do botão também
+      let warningBox = document.getElementById("closedWarning");
+      if (!warningBox) {
+        warningBox = document.createElement("div");
+        warningBox.id = "closedWarning";
+        warningBox.className =
+          "mt-3 text-center text-xs text-red-500 font-medium bg-red-50 p-2 rounded border border-red-100";
+        warningBox.innerHTML =
+          "O mercado está fechado. Você pode simular, mas as solicitações só abrem em horário comercial.";
+        newBtn.parentNode.appendChild(warningBox);
+      }
+    } else {
+      // MODO ABERTO: Botão Dourado Normal
+      // Remove aviso se existir
+      const oldWarning = document.getElementById("closedWarning");
+      if (oldWarning) oldWarning.remove();
+
+      newBtn.className =
+        "group mt-4 w-full h-14 px-4 rounded-xl bg-gold hover:bg-gold-hover text-gray-700 font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2";
+      newBtn.innerHTML = `Solicitar Câmbio <i class="ph-bold ph-arrow-right text-xl transition-transform group-hover:translate-x-1.5"></i>`;
+
+      newBtn.onclick = (e) => {
+        e.preventDefault();
+        openModal(); // Abre o formulário normalmente
+      };
+    }
+
+    // Atualiza a referência global para garantir que funcione
+    window.buyBtn = newBtn;
   }
 
   function updateComparison(currency, amount) {
@@ -708,7 +820,6 @@ document.addEventListener("DOMContentLoaded", () => {
             isDelivery === "SIM" ? getEl("deliveryAddress").value : "—",
           delivery_cep: isDelivery === "SIM" ? getEl("deliveryCEP").value : "—",
 
-          // SEMPRE LIMPO AGORA - O CLIENTE ENVIA DEPOIS
           file_preview: "",
           obs_documento:
             "Cliente instruído a enviar documentação via WhatsApp ou E-mail (conversor@maconsultoriacambio.com.br).",
@@ -835,7 +946,6 @@ document.addEventListener("keydown", function (event) {
 
 // ---------- LÓGICA DO FAQ (ACCORDION) ----------
 function toggleFaq(button) {
-  // Pega o conteúdo (a div logo abaixo do botão)
   const content = button.nextElementSibling;
   // Pega o ícone da seta
   const icon = button.querySelector("i");
@@ -843,11 +953,11 @@ function toggleFaq(button) {
   // Alterna a visibilidade
   if (content.classList.contains("hidden")) {
     content.classList.remove("hidden");
-    content.classList.add("block"); // Garante display block
-    icon.style.transform = "rotate(180deg)"; // Gira a seta para cima
+    content.classList.add("block");
+    icon.style.transform = "rotate(180deg)";
   } else {
     content.classList.add("hidden");
     content.classList.remove("block");
-    icon.style.transform = "rotate(0deg)"; // Gira a seta para baixo
+    icon.style.transform = "rotate(0deg)";
   }
 }
