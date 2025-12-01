@@ -319,19 +319,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------- VERIFICAÇÃO DE HORÁRIO COMERCIAL ----------
   function isMarketOpen() {
-    // Horário: Segunda (06h) até Sexta (19h)
+    // Horário: Segunda (09:30) até Sexta (18:00)
     const now = new Date();
     const day = now.getDay(); // 0=Dom, 1=Seg, ..., 6=Sáb
     const hour = now.getHours();
+    const minutes = now.getMinutes(); // Adicionado para validar os 30min
 
-    // Bloqueia Fim de Semana
+    // 1. Bloqueia Fim de Semana (Sábado e Domingo)
     if (day === 0 || day === 6) return false;
 
-    // Bloqueia Segunda antes das 06:00
-    if (day === 1 && hour < 6) return false;
+    // 2. Bloqueia Segunda antes das 09:30
+    if (day === 1) {
+      if (hour < 9) return false; // Bloqueia tudo antes das 9h (00h-08h)
+      if (hour === 9 && minutes < 30) return false; // Bloqueia das 09:00 às 09:29
+    }
 
-    // Bloqueia Sexta depois das 19:00
-    if (day === 5 && hour >= 19) return false;
+    // 3. Bloqueia Sexta a partir das 18:00
+    // Assim que der 18:00:00, ele já retorna false
+    if (day === 5 && hour >= 18) return false;
 
     return true;
   }
@@ -645,11 +650,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       newBtn.onclick = (e) => {
         e.preventDefault();
-        openModal(); // Abre o formulário normalmente
+        openModal();
       };
     }
 
-    // Atualiza a referência global para garantir que funcione
     window.buyBtn = newBtn;
   }
 
@@ -947,10 +951,8 @@ document.addEventListener("keydown", function (event) {
 // ---------- LÓGICA DO FAQ (ACCORDION) ----------
 function toggleFaq(button) {
   const content = button.nextElementSibling;
-  // Pega o ícone da seta
   const icon = button.querySelector("i");
 
-  // Alterna a visibilidade
   if (content.classList.contains("hidden")) {
     content.classList.remove("hidden");
     content.classList.add("block");
