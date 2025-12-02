@@ -321,18 +321,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
       startUpdateTimer();
     } catch (err) {
-      console.error(err);
-      // Fallback seguro em caso de erro
-      ratesPapel = {
-        USD: { raw: 5.8, display: "R$ 5,80" },
-        EUR: { raw: 6.2, display: "R$ 6,20" },
-      };
-      ratesCartao = {
-        USD: { raw: 5.95, display: "R$ 5,95" },
-        EUR: { raw: 6.4, display: "R$ 6,40" },
-      };
+      console.error("❌ Erro crítico ao buscar taxas:", err);
+      ratesPapel = {};
+      ratesCartao = {};
 
-      if (dataStatus) dataStatus.innerHTML = "Offline (Usando taxas de backup)";
+      if (dataStatus) {
+        dataStatus.className =
+          "text-xs text-red-600 font-bold bg-red-50 px-3 py-1 rounded-full border border-red-200 flex items-center gap-1 animate-pulse";
+        dataStatus.innerHTML = `<i class="ph-bold ph-warning-circle"></i> Sistema Indisponível`;
+        dataStatus.classList.remove("hidden");
+      }
+
+      if (resultCard) resultCard.classList.add("hidden");
+      if (comparisonGrid) comparisonGrid.innerHTML = "";
+
+      // Mantém o timer rodando para tentar conectar de novo daqui a pouco
       startUpdateTimer();
     }
   }
