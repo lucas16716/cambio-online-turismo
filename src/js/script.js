@@ -353,7 +353,11 @@ document.addEventListener("DOMContentLoaded", () => {
       UPDATE_INTERVAL_SECONDS - Math.floor((now - lastFetchTime) / 1000);
 
     if (lastUpdate)
-      lastUpdate.textContent = `${lastFetchTime.toLocaleDateString()} às ${lastFetchTime.toLocaleTimeString()}`;
+      lastUpdate.textContent = `${lastFetchTime.toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      })} às ${lastFetchTime.toLocaleTimeString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      })}`;
 
     if (nextUpdate) {
       if (remaining <= 0) {
@@ -692,7 +696,12 @@ document.addEventListener("DOMContentLoaded", () => {
     comparisonGrid.innerHTML = "";
     resultValue.textContent = "Consulta";
     const now = new Date();
-    quoteTime.innerHTML = `<i class="ph-bold ph-warning"></i> Moeda Exótica - Cotação: ${now.toLocaleDateString()} às ${now.toLocaleTimeString()}`;
+    quoteTime.innerHTML = `<i class="ph-bold ph-warning"></i> Moeda Exótica - Cotação: ${now.toLocaleDateString(
+      "pt-BR",
+      { timeZone: "America/Sao_Paulo" }
+    )} às ${now.toLocaleTimeString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+    })}`;
     calcDetails.innerHTML = `<div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg space-y-3"><div class="text-sm font-bold text-yellow-800 flex items-center gap-2"><i class="ph-bold ph-warning-circle text-xl"></i> Cotação especial necessária</div><p class="text-sm text-yellow-700">O ${currencyName} é uma moeda exótica e sua taxa é ajustada mediante consulta.</p><p class="text-xs text-yellow-700 font-semibold">Valor desejado: ${amount} ${currencyCode}</p></div>`;
 
     // Substitui botão por WhatsApp
@@ -767,7 +776,12 @@ document.addEventListener("DOMContentLoaded", () => {
     resultCard.classList.add("fade-in");
     resultValue.textContent = formatBRL(res.totalBRL);
     if (quoteTime)
-      quoteTime.innerHTML = `<i class="ph-bold ph-clock"></i> Cotação: ${res.time.toLocaleDateString()} às ${res.time.toLocaleTimeString()}`;
+      quoteTime.innerHTML = `<i class="ph-bold ph-clock"></i> Cotação: ${res.time.toLocaleDateString(
+        "pt-BR",
+        { timeZone: "America/Sao_Paulo" }
+      )} às ${res.time.toLocaleTimeString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      })}`;
 
     if (calcDetails) {
       calcDetails.innerHTML = `
@@ -973,7 +987,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (operationalInfo) {
-      operationalInfo.innerHTML = `<div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2 text-justify"><p class="font-bold text-gray-700 mb-1 flex items-center gap-1"><i class="ph-bold ph-info"></i> Informações Importantes:</p><p>1. O VET (Valor Efetivo Total) representa o custo final, incluindo câmbio, impostos (IOF) e tarifas.</p><p>2. A operação está sujeita a disponibilidade de estoque e validação de dados e documento de identificação (é obrigatório o envio de documento válido (RG, RNE ou CNH).</p><p>3. Valores/taxas sujeitos a alteração até o fechamento efetivo da operação com um de nossos operadores.</p><p>4. Câmbio Delivery: Gratuito para operações acima de USD 500,00 (ou equivalente). Para valores menores, taxa de R$ 30,00.</p></div>`;
+      operationalInfo.innerHTML = `<div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2 text-justify"><p class="font-bold text-gray-700 mb-1 flex items-center gap-1"><i class="ph-bold ph-info"></i> Informações Importantes:</p><p>1. O VET (Valor Efetivo Total) representa o custo final, incluindo câmbio, impostos (IOF) e tarifas.</p><p>2. A operação está sujeita a disponibilidade de estoque e validação de dados/documento de identificação (é obrigatório o envio de documento válido como RG, RNE ou CNH).</p><p>3. Valores/taxas sujeitos a alteração até o fechamento efetivo da operação com um de nossos operadores.</p><p>4. Câmbio Delivery: Grátis para operações acima de USD 500,00 (ou equivalente em outra moeda). Para valores menores, taxa de R$ 30,00 (consulte a cobertura do seu CEP e a disponibilidade diretamente com um especialista).</p></div>`;
     }
 
     budgetForm.classList.remove("hidden");
@@ -1019,7 +1033,9 @@ document.addEventListener("DOMContentLoaded", () => {
             minimumFractionDigits: 2,
           }),
           currency_code: currentQuote.currencyCode,
-          quote_date: new Date().toLocaleString("pt-BR"),
+          quote_date: new Date().toLocaleString("pt-BR", {
+            timeZone: "America/Sao_Paulo",
+          }),
           exchange_rate: formatRate(currentQuote.cotaçãoBase),
           iof_value: formatBRL(currentQuote.totalIOFValue),
           vet_rate: formatRate(currentQuote.VET),
