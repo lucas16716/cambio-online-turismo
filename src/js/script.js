@@ -867,6 +867,11 @@ document.addEventListener("DOMContentLoaded", () => {
           to_email: email,
         });
         await Promise.all([sendAdmin, sendClient]);
+        if (typeof gtag === "function") {
+          gtag("event", "conversion", {
+            send_to: "AW-738500529/ZX95CJWVhM4bELG_kuAC",
+          });
+        }
         budgetForm.classList.add("hidden");
         successStep.classList.remove("hidden");
         setupFinalWhats(name);
