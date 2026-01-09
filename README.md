@@ -21,7 +21,7 @@
 
 > Este sistema foi desenvolvido para transpor as necessidades específicas da M&A Consultoria para o ambiente digital. Diferente de conversores genéricos, esta aplicação segue normas bancárias reais e oferece uma seção de FAQ detalhada para dar total suporte e transparência ao cliente durante a simulação.
 
-- 🌐 <a href="https://cotacaoonline.maconsultoriacambio.com.br/">Acesse a aplicação</a>
+🌐 <a href="https://cotacaoonline.maconsultoriacambio.com.br/">Acesse a aplicação</a>
 
 <p align="center">
   <img src="assets/img/print.png" alt="Preview do Sistema" width="100%">
