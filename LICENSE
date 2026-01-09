@@ -1,0 +1,36 @@
+Licença de Uso Profissional e Comercial
+© 2025 Lucas Code & M&A Consultoria Câmbio – Todos os direitos reservados.
+
+Este repositório contém o código-fonte original do Conversor de Câmbio Online da M&A Consultoria Câmbio. O propósito deste projeto é atuar como ferramenta oficial da empresa e como portfólio técnico de alto nível para o desenvolvedor Lucas Code.
+
+1. Propriedade Intelectual e Direitos Autorais
+O código-fonte, a arquitetura lógica (incluindo algoritmos de validação de feriados, cálculos de VET/IOF e travas de segurança) e a interface visual foram desenvolvidos por Lucas Code. Todo o conteúdo institucional, logotipos, nomes comerciais e identidade visual são de propriedade exclusiva da M&A Consultoria Câmbio.
+
+2. Permissões (O que é permitido)
+Você está autorizado a:
+
+Visualizar e consultar o código-fonte publicamente neste repositório;
+
+Estudar a lógica e a organização do projeto para fins estritamente educacionais e de aprendizado;
+
+Citar este projeto como referência de boas práticas em desenvolvimento Vanilla JS e integração de APIs em fóruns ou estudos de caso, desde que atribuídos os créditos.
+
+3. Restrições (O que é proibido)
+Você NÃO está autorizado a:
+
+Clonar, baixar ou hospedar este projeto em servidores próprios ou públicos para fins comerciais ou concorrenciais;
+
+Copiar a lógica de negócio (algoritmos financeiros e de calendário) para uso em outras ferramentas de câmbio ou serviços financeiros;
+
+Redistribuir ou comercializar partes ou a totalidade deste software como se fosse um produto próprio ou "white label";
+
+Utilizar a marca M&A Consultoria Câmbio ou seus ativos visuais em qualquer outro contexto sem autorização prévia por escrito.
+
+4. Isenção de Responsabilidade
+Este código é fornecido para consulta "como está". O desenvolvedor e a empresa proprietária não se responsabilizam pelo uso indevido ou por eventuais perdas financeiras decorrentes da tentativa de replicação desta ferramenta por terceiros sem a devida infraestrutura e suporte oficial.
+
+5. Contato e Autorizações
+Para solicitações de licenciamento, parcerias comerciais ou dúvidas sobre o uso do código, entre em contato através dos canais oficiais:
+
+📧 Desenvolvedor: lvcas.code@gmail.com
+📧 M&A Consultoria Câmbio: maconsultoriacambio@gmail.com
