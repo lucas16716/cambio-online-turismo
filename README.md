@@ -72,7 +72,8 @@
 
 ---
 
-<h2>📝 LICENÇA</h2> 
+<h2>📝 LICENÇA</h2>
+
 Este projeto possui uma **Licença Personalizada**. O código está disponível para consulta pública e portfólio, porém é proibida a sua reprodução, cópia ou uso comercial sem autorização expressa de **Lucas Code** e **M&A Consultoria Câmbio**. Confira os detalhes no arquivo [LICENSE].
 
 <h2>🧑🏻‍💻 AUTOR</h2> 
