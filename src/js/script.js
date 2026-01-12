@@ -841,7 +841,7 @@ document.addEventListener("DOMContentLoaded", () => {
           client_name: name,
           client_email: email,
           client_phone: phone,
-          client_cpf: getEl("clientCPF").value,
+          client_cpf: getEl(" ").value,
           client_rg: getEl("clientRG").value,
           client_birth: getEl("clientBirth").value,
           client_birth_city: getEl("clientBirthCity").value,
@@ -896,7 +896,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const iofPercentage = (currentQuote.iofRate * 100)
         .toFixed(2)
         .replace(".", ",");
-      const msg = `Olá, M&A Consultoria Câmbio! Meu nome é *${name}*.\nAcabei de enviar meus dados pelo Site Conversor.\n\nGostaria de prosseguir com a operação:\n*MODALIDADE: ${modeText}*\n*VALOR: ${
+      const msg = `Olá, M&A Consultoria Câmbio! Meu nome é *${name} (CPF ${client_cpf})*.\nAcabei de enviar meus dados pelo Site Conversor.\n\nGostaria de prosseguir com a operação:\n*MODALIDADE: ${modeText}*\n*VALOR: ${
         currentQuote.amount
       } ${currentQuote.currencyCode}*\n- Cotação Turismo: R$ ${formatRate(
         currentQuote.cotaçãoBase
