@@ -37,7 +37,7 @@
 - 📧 **Fluxo de Solicitação:** Integração com EmailJS para envio de confirmações transacionais para o cliente e para o administrador.
 - 🧹 **Sanitização RegEx:** Validação e formatação automática de campos sensíveis como CPF, Telefone e CEP.
 - 👥 **Experiência do Usuário (UX):** Fluxo didático e simplificado, com seção de FAQ para apoio ao usuário.
-- 💻 **Interface Moderna (UI):** — Design minimalista, focado na clareza das informações e totalmente responsivo.
+- 💻 **Interface Moderna (UI):** Design minimalista, focado na clareza das informações e totalmente responsivo.
 
 ### Considerações Técnicas
 
