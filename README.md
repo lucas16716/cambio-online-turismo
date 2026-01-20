@@ -19,7 +19,7 @@
 
 <h2 id="projeto">PROJETO</h2>
 
-> Este sistema foi desenvolvido para transpor as necessidades específicas da M&A Consultoria para o ambiente digital. Diferente de conversores genéricos, esta aplicação segue normas bancárias reais e regras de negócio rigorosas, onde toda a lógica e interações acontecem no navegador, sem recarregar a página, seguindo o conceito de SPA, mas sem uso de frameworks.
+> Este sistema foi desenvolvido para transpor as necessidades específicas da M&A Consultoria para o ambiente digital. Diferente de conversores genéricos, esta aplicação segue normas bancárias reais e regras de negócio rigorosas, onde toda a lógica e interações acontecem no navegador, sem recarregar a página, seguindo o conceito de SPA-like, mas sem uso de frameworks.
 
 🌐 <a href="https://cotacaoonline.maconsultoriacambio.com.br/">Acesse a aplicação</a>
 
@@ -29,18 +29,27 @@
 
 <h2 id="funcionalidades">FUNCIONALIDADES</h2>
 
-- 📊 **Cotações em Tempo Real:** Integração com Google Sheets API para atualização dinâmica de taxas sem necessidade de banco de dados.
-- 🧮 **Cálculos Financeiros:** Processamento automático de IOF, Valor Efetivo Total (VET) e Valor Total Final em conformidade com as taxas vigentes.
+- 📊 **Cotações em Tempo Real:** Integração com Google Sheets API para atualização dinâmica de taxas.
+- 🧮 **Cálculos Financeiros:** Processamento automático de taxas e impostos, entregando instantaneamente o custo real da operação.
 - 🏦 **Inteligência de Mercado:** Algoritmo que identifica horário comercial e feriados bancários (móveis e fixos) para liberar ou bloquear simulações.
 - 🌍 **Sincronização de Fuso Horário:** Conversão forçada para o horário de Brasília (America/Sao_Paulo) para evitar inconsistências em acessos internacionais.
 - 🛡️ **Arquitetura Fail-Safe:** Sistema de proteção que bloqueia operações caso a fonte de dados (Google Sheets) esteja inacessível ou obsoleta.
 - 📧 **Fluxo de Solicitação:** Integração com EmailJS para envio de confirmações transacionais para o cliente e para o administrador.
 - 🧹 **Sanitização RegEx:** Validação e formatação automática de campos sensíveis como CPF, Telefone e CEP.
+- 👥 **Experiência do Usuário (UX):** Fluxo didático e simplificado, com seção de FAQ para apoio ao usuário.
+- 💻 **Interface Moderna (UI):** — Design minimalista, focado na clareza das informações e totalmente responsivo.
+
+### Considerações Técnicas
+
+- Toda a lógica de negócio é executada no client-side por decisão arquitetural,
+  visando performance, controle e redução de dependências de backend.
+- A Google Sheets API foi adotada como BaaS por atender aos requisitos de confiabilidade,
+  versionamento e atualização operacional do cliente.
 
 <h2 id="tecnologias-e-ferramentas">TECNOLOGIAS E FERRAMENTAS</h2>
 
 - **HTML5 →** Estrutura semântica e acessível (A11y).
-- **CSS3 →** Estilização em componentes visuais simples.
+- **CSS3 →** Estilização base e customizações específicas.
 - **Tailwind CSS →** Estilização utilitária moderna.
 - **JavaScript (ES6+) →** Lógica central em Vanilla JS, manipulação de DOM e lógica temporal complexa.
 - **Google Sheets API →** Backend as a Service (BaaS) para gestão de taxas.
