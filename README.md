@@ -8,7 +8,7 @@
 
 </div>
 
-**Solução digital voltada à automação de operações de câmbio turismo**, construída com arquitetura **SPA (Single Page Application)** e com objetivo de **otimizar o fluxo de atendimento** da corretora através de um **sistema seguro, preciso e focado na experiência do usuário final**.
+**Solução digital voltada à automação de operações de câmbio turismo**, com objetivo de **otimizar o fluxo de atendimento** da corretora através de um **sistema seguro, preciso e focado na experiência do usuário final**.
 
 <p align="center">
   <a href="#projeto">Projeto</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
@@ -19,7 +19,7 @@
 
 <h2 id="projeto">PROJETO</h2>
 
-> Este sistema foi desenvolvido para transpor as necessidades específicas da M&A Consultoria para o ambiente digital. Diferente de conversores genéricos, esta aplicação segue normas bancárias reais e oferece uma seção de FAQ detalhada para dar total suporte e transparência ao cliente durante a simulação.
+> Este sistema foi desenvolvido para transpor as necessidades específicas da M&A Consultoria para o ambiente digital. Diferente de conversores genéricos, esta aplicação segue normas bancárias reais e regras de negócio rigorosas, onde toda a lógica e interações acontecem no navegador, sem recarregar a página, seguindo o conceito de SPA, mas sem uso de frameworks.
 
 🌐 <a href="https://cotacaoonline.maconsultoriacambio.com.br/">Acesse a aplicação</a>
 
