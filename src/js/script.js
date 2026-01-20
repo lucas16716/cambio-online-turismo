@@ -180,14 +180,14 @@ document.addEventListener("DOMContentLoaded", () => {
       ? code
           .toUpperCase()
           .replace(/./g, (char) =>
-            String.fromCodePoint(char.charCodeAt(0) + 127397)
+            String.fromCodePoint(char.charCodeAt(0) + 127397),
           )
       : "";
   }
   function getWhatsAppLinkForExotic(currencyCode, amount, operator) {
     const msg = `Olá, M&A Consultoria Câmbio! Tenho interesse na moeda exótica *${currencyCode}*.\nQuantidade: *${amount}*.\n\nPor favor, me ajude com a cotação.`;
     return `https://api.whatsapp.com/send?phone=${operator}&text=${encodeURIComponent(
-      msg
+      msg,
     )}`;
   }
   async function fetchSheetRates() {
@@ -365,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function isMarketOpen() {
     const nowSP = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+      new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }),
     );
     const day = nowSP.getDay();
     if (day === 0 || day === 6) return !1;
@@ -506,19 +506,25 @@ document.addEventListener("DOMContentLoaded", () => {
         : `R$ ${formatRate(available[code].raw)}`;
       btn.className = `text-left p-3 rounded-lg border transition-all ${
         isSelected
-          ? "border-[#d6c07a] bg-[#fffdf5]"
+          ? "border-[#d6c07a] bg-[#fffdf5] ring-2 ring-[#d6c07a]/20"
           : "border-gray-200 bg-white hover:bg-gray-50"
       }`;
-      btn.innerHTML = `<div class="text-sm font-medium flex items-center text-gray-800">${getFlagElement(
-        code
-      )} ${code}</div><div class="text-xs ${
+      btn.innerHTML = `<div class="text-sm font-medium flex items-center text-gray-800">
+      ${getFlagElement(code)} ${code}</div>
+      <div class="text-xs ${
         isExoticDisplay ? "text-red-500" : "text-gray-500"
       } mt-1">${rateDisplay}</div>`;
+
       btn.onclick = () => {
         fromSel.value = code;
         highlightSelectedCurrency(code);
         updateInputHelper();
-        resultCard.classList.add("hidden");
+
+        if (amountInput.value > 0) {
+          updateDisplayConversion();
+        } else {
+          resultCard.classList.add("hidden");
+        }
       };
       currencyList.appendChild(btn);
     });
@@ -536,7 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function fillSelector() {
     const current = fromSel.value;
-    fromSel.disabled = !0;
+    fromSel.disabled = false;
     fromSel.innerHTML =
       '<option value="" disabled selected>Selecione...</option>';
     Object.keys(available).forEach((code) => {
@@ -547,6 +553,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     if (current && available[current]) fromSel.value = current;
   }
+  fromSel.onchange = () => {
+    const selectedCode = fromSel.value;
+    highlightSelectedCurrency(selectedCode);
+    updateInputHelper();
+
+    if (amountInput.value > 0) {
+      updateDisplayConversion();
+    }
+  };
+
   function displayExoticWarning(currencyCode, amount) {
     const currencyName = PAPER_RULES[currencyCode].name;
     const oldBuyBtn = getEl("buyBtn");
@@ -557,7 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const now = new Date();
     quoteTime.innerHTML = `<i class="ph-bold ph-warning"></i> Moeda Exótica - Cotação: ${now.toLocaleDateString(
       "pt-BR",
-      { timeZone: "America/Sao_Paulo" }
+      { timeZone: "America/Sao_Paulo" },
     )} às ${now.toLocaleTimeString("pt-BR", {
       timeZone: "America/Sao_Paulo",
     })}`;
@@ -569,7 +585,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const randomIndex = Math.random() < 0.5 ? 0 : 1;
       window.open(
         getWhatsAppLinkForExotic(currencyCode, amount, OPERATORS[randomIndex]),
-        "_blank"
+        "_blank",
       );
       setTimeout(() => window.location.reload(), 1000);
     };
@@ -615,17 +631,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (quoteTime)
       quoteTime.innerHTML = `<i class="ph-bold ph-clock"></i> Cotação: ${res.time.toLocaleDateString(
         "pt-BR",
-        { timeZone: "America/Sao_Paulo" }
+        { timeZone: "America/Sao_Paulo" },
       )} às ${res.time.toLocaleTimeString("pt-BR", {
         timeZone: "America/Sao_Paulo",
       })}`;
     if (calcDetails) {
       calcDetails.innerHTML = `
         <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">Valor Líquido <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor total convertido sem impostos</span></span></span><span class="font-mono">${formatBRL(
-          res.conversionBase
+          res.conversionBase,
         )}</span></div>
         <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">Cotação Turismo<span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor unitário da moeda sem impostos</span></span></span><span class="font-mono">R$ ${formatRate(
-          res.cotaçãoBase
+          res.cotaçãoBase,
         )}</span></div>
         <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">IOF (${(
           res.iofRate * 100
@@ -633,12 +649,12 @@ document.addEventListener("DOMContentLoaded", () => {
           .toFixed(2)
           .replace(
             ".",
-            ","
+            ",",
           )}%) <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Imposto obrigatório sobre Operações Financeiras</span></span></span><span class="font-mono">${formatBRL(
-        res.totalIOFValue
-      )}</span></div>
+          res.totalIOFValue,
+        )}</span></div>
         <div class="flex justify-between text-sm pt-1"><span class="text-gray-600 flex items-center gap-1">Taxa VET Unitária <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor Efetivo Total - Inclui câmbio, IOF e todas as taxas aplicáveis</span></span></span><span class="font-mono font-bold text-[#d6c07a]">R$ ${formatRate(
-          res.VET
+          res.VET,
         )}</span></div>`;
     }
     updateComparison(from, amount);
@@ -655,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
       newBtn.onclick = (e) => {
         e.preventDefault();
         alert(
-          "Para solicitar e finalizar a compra da moeda, nosso atendimento funciona de Segunda a Sexta, das 09h30 às 18h00. Fora desse horário (período noturno), finais de semana e feriados, o sistema de solicitação permanece fechado."
+          "Para solicitar e finalizar a compra da moeda, nosso atendimento funciona de Segunda a Sexta, das 09h30 às 18h00. Fora desse horário (período noturno), finais de semana e feriados, o sistema de solicitação permanece fechado.",
         );
       };
       const warningBox = document.createElement("div");
@@ -663,12 +679,12 @@ document.addEventListener("DOMContentLoaded", () => {
       warningBox.className =
         "mt-3 text-center text-xs text-red-500 font-medium bg-red-50 p-2 rounded border border-red-100 animate-pulse";
       warningBox.innerHTML =
-        "O mercado está fechado. Simulações liberadas, solicitações apenas em horário comercial.";
+        "O mercado está fechado. Simulações liberadas, solicitações/compras apenas em horário comercial.";
       newBtn.parentNode.appendChild(warningBox);
     } else {
       newBtn.className =
         "group mt-4 w-full h-14 px-4 rounded-xl bg-gold hover:bg-gold-hover text-gray-700 font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2";
-      newBtn.innerHTML = `Solicitar Câmbio <i class="ph-bold ph-arrow-right text-xl transition-transform group-hover:translate-x-1.5"></i>`;
+      newBtn.innerHTML = `Prosseguir com a Compra <i class="ph-bold ph-arrow-right text-xl transition-transform group-hover:translate-x-1.5"></i>`;
       newBtn.onclick = (e) => {
         e.preventDefault();
         openModal();
@@ -695,19 +711,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (res) {
         div.innerHTML = `
           <div class="flex justify-between items-start mb-4"><div class="font-bold text-gray-800 flex items-center gap-2">${icon} ${titleText}</div>${
-          isCurrent
-            ? '<span class="text-[10px] font-bold text-[#d6c07a] bg-[#d6c07a]/10 px-2 py-1 rounded uppercase tracking-wider">Selecionado</span>'
-            : ""
-        }</div>
+            isCurrent
+              ? '<span class="text-[10px] font-bold text-[#d6c07a] bg-[#d6c07a]/10 px-2 py-1 rounded uppercase tracking-wider">Selecionado</span>'
+              : ""
+          }</div>
           <div class="text-3xl font-extrabold text-gray-800 mb-6 tracking-tight">${formatBRL(
-            res.totalBRL
+            res.totalBRL,
           )}</div>
           <div class="space-y-2 text-xs text-gray-500 border-t border-gray-100 pt-4">
             <div class="flex justify-between items-center"><span>Valor Líquido</span><span class="font-mono text-gray-700">${formatBRL(
-              res.conversionBase
+              res.conversionBase,
             )}</span></div>
             <div class="flex justify-between items-center"><span>Cotação Turismo</span><span class="font-mono text-gray-700">R$ ${formatRate(
-              res.cotaçãoBase
+              res.cotaçãoBase,
             )}</span></div>
             <div class="flex justify-between items-center"><span>IOF (${(
               res.iofRate * 100
@@ -715,12 +731,12 @@ document.addEventListener("DOMContentLoaded", () => {
               .toFixed(2)
               .replace(
                 ".",
-                ","
+                ",",
               )}%)</span><span class="font-mono text-gray-700">${formatBRL(
-          res.totalIOFValue
-        )}</span></div>
+              res.totalIOFValue,
+            )}</span></div>
             <div class="flex justify-between items-center text-xs text-gray-500"><span>Taxa VET Un.</span><span class="font-mono text-gray-700">R$ ${formatRate(
-              res.VET
+              res.VET,
             )}</span></div>
           </div>`;
         div.onclick = () => {
@@ -760,7 +776,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!currentQuote) return showError("Faça uma cotação antes.");
     modalCurrencyAmount.textContent = currentQuote.amount.toLocaleString(
       "pt-BR",
-      { minimumFractionDigits: 2 }
+      { minimumFractionDigits: 2 },
     );
     modalCurrencyCode.textContent = currentQuote.currencyCode;
     modalTotalBRL.textContent = formatBRL(currentQuote.totalBRL);
@@ -770,13 +786,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <button type="button" id="toggleRatesBtn" class="text-[10px] uppercase font-bold text-gray-400 hover:text-[#d6c07a] flex items-center justify-end gap-1 w-full transition-colors focus:outline-none">Ver taxas <i id="toggleIcon" class="ph-bold ph-caret-down"></i></button>
         <div id="ratesContainer" class="hidden mt-2 pt-2 border-t border-[#d6c07a]/10 text-xs space-y-1">
           <div class="flex justify-between text-gray-500"><span>Cotação Base:</span><span class="font-mono">R$ ${formatRate(
-            currentQuote.cotaçãoBase
+            currentQuote.cotaçãoBase,
           )}</span></div>
           <div class="flex justify-between text-gray-500"><span>IOF (${iofPct}%):</span><span class="font-mono">${formatBRL(
-        currentQuote.totalIOFValue
-      )}</span></div>
+            currentQuote.totalIOFValue,
+          )}</span></div>
           <div class="flex justify-between text-gray-800 font-semibold mt-1 pt-1 border-t border-dashed border-gray-200"><span>VET Final:</span><span class="font-mono text-[#d6c07a]">R$ ${formatRate(
-            currentQuote.VET
+            currentQuote.VET,
           )}</span></div>
         </div>`;
       const btn = document.getElementById("toggleRatesBtn");
@@ -860,7 +876,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const sendAdmin = emailjs.send(
           SERVICE_ID,
           TEMPLATE_ADMIN,
-          templateParams
+          templateParams,
         );
         const sendClient = emailjs.send(SERVICE_ID, TEMPLATE_CLIENTE, {
           ...templateParams,
@@ -899,15 +915,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const msg = `Olá, M&A Consultoria Câmbio! Meu nome é *${name} (CPF ${client_cpf})*.\nAcabei de enviar meus dados pelo Site Conversor.\n\nGostaria de prosseguir com a operação:\n*MODALIDADE: ${modeText}*\n*VALOR: ${
         currentQuote.amount
       } ${currentQuote.currencyCode}*\n- Cotação Turismo: R$ ${formatRate(
-        currentQuote.cotaçãoBase
+        currentQuote.cotaçãoBase,
       )}\n- IOF: ${iofPercentage}%\n\n*👉🏻 TOTAL A PAGAR: ${formatBRL(
-        currentQuote.totalBRL
+        currentQuote.totalBRL,
       )}*\n\n*📎 Estou enviando a foto do meu documento (CNH, RG ou RNE) por aqui para finalizar meu cadastro.*`;
       window.open(
         `https://api.whatsapp.com/send?phone=${selectedOperator}&text=${encodeURIComponent(
-          msg
+          msg,
         )}`,
-        "_blank"
+        "_blank",
       );
       setTimeout(() => window.location.reload(), 1000);
     };
