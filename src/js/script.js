@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🟢 Script iniciado. DOM carregado.");
+
   const SPREADSHEET_ID = "1BvDKkVQAzH3kZkuhxxqbLjwIvG3MEB-YCWrI3H0NcX4";
   const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
   const IOF_RATE = 0.035;
@@ -8,6 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const TEMPLATE_ADMIN = "template_9fzmu0n";
   const TEMPLATE_CLIENTE = "template_u5saecn";
   const OPERATORS = ["5511953505626", "5511938059556"];
+
+  // --- ATUALIZADO COM REGRAS DE NOTAS PARA EXÓTICAS ---
   const PAPER_RULES = {
     USD: { minStep: 50, notes: "100 (50 apenas sob consulta)" },
     EUR: { minStep: 50, notes: "100 (50 apenas sob consulta)" },
@@ -20,14 +23,39 @@ document.addEventListener("DOMContentLoaded", () => {
     MXN: { minStep: 200, notes: "200" },
     UYU: { minStep: 1000, notes: "1.000" },
     NZD: { minStep: 100, notes: "100" },
-    AED: { isExotic: !0, name: "Dirham (AED)" },
-    CNY: { isExotic: !0, name: "Iuan (CNY)" },
-    PEN: { isExotic: !0, name: "Novo Sol (PEN)" },
-    ARS: { isExotic: !0, name: "Peso Argentino (ARS)" },
-    COP: { isExotic: !0, name: "Peso Colombiano (COP)" },
-    ZAR: { isExotic: !0, name: "Rand (ZAR)" },
+
+    // Moedas Exóticas com regras definidas
+    AED: {
+      isExotic: !0,
+      minStep: 50,
+      notes: "50, 100 e 500",
+      name: "Dirham (AED)",
+    },
+    CNY: { isExotic: !0, minStep: 100, notes: "100", name: "Iuan (CNY)" },
+    PEN: {
+      isExotic: !0,
+      minStep: 50,
+      notes: "50 e 100",
+      name: "Novo Sol (PEN)",
+    },
+    ARS: {
+      isExotic: !0,
+      minStep: 1000,
+      notes: "1.000 ou 20.000",
+      name: "Peso Argentino (ARS)",
+    },
+    COP: {
+      isExotic: !0,
+      minStep: 2000,
+      notes: "2.000, 50.000 e 100.000",
+      name: "Peso Colombiano (COP)",
+    },
+    ZAR: { isExotic: !0, minStep: 100, notes: "100 e 200", name: "Rand (ZAR)" },
   };
+
   const CARD_RULES = { MIN_NEW_USD: 100, MIN_RELOAD_USD: 50 };
+
+  // Elementos do DOM
   const getEl = (id) => document.getElementById(id);
   const dataStatus = getEl("dataStatus");
   const btnPapel = getEl("btnPapel");
@@ -60,7 +88,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const clientPhone = getEl("clientPhone");
   const deliveryCheck = getEl("deliveryCheck");
   const deliveryFields = getEl("deliveryFields");
+
+  // Salva o HTML original do botão para restaurar depois
   const originalBuyBtnHTML = buyBtn ? buyBtn.outerHTML : null;
+
+  // Lógica do Checkbox de Delivery
   if (deliveryCheck) {
     deliveryCheck.addEventListener("change", function () {
       if (this.checked) {
@@ -74,17 +106,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Máscaras de Input (CPF, Telefone, CEP)
   const maskInputs = () => {
     const cpfInput = getEl("clientCPF");
     const phoneInput = getEl("clientPhone");
     const cepInput = getEl("clientCEP");
     const deliveryCepInput = getEl("deliveryCEP");
+
     const applyMask = (input, maskFunction) => {
       if (!input) return;
       input.addEventListener("input", (e) => {
         e.target.value = maskFunction(e.target.value);
       });
     };
+
     const masks = {
       cpf: (v) =>
         v
@@ -104,12 +140,15 @@ document.addEventListener("DOMContentLoaded", () => {
           .replace(/^(\d{5})(\d)/, "$1-$2")
           .substring(0, 9),
     };
+
     applyMask(cpfInput, masks.cpf);
     applyMask(phoneInput, masks.phone);
     applyMask(cepInput, masks.cep);
     if (deliveryCepInput) applyMask(deliveryCepInput, masks.cep);
   };
   maskInputs();
+
+  // Variáveis de Estado
   let ratesPapel = {};
   let ratesCartao = {};
   let currentMode = "";
@@ -117,18 +156,23 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastFetchTime = null;
   let countdownInterval;
   let currentQuote = null;
+
+  // Formatadores
   function formatBRL(v) {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(v);
   }
+
   function formatRate(v) {
     return new Intl.NumberFormat("pt-BR", {
       minimumFractionDigits: 4,
       maximumFractionDigits: 4,
     }).format(v);
   }
+
+  // Geradores de HTML (Bandeiras)
   function getFlagElement(currencyCode) {
     const countryMap = {
       USD: "us",
@@ -155,6 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ? `<img src="https://flagcdn.com/24x18/${countryCode}.png" alt="${currencyCode}" class="w-5 h-auto shadow-sm inline-block mr-1.5 align-middle">`
       : "";
   }
+
   function getFlagEmoji(currencyCode) {
     const countryMap = {
       USD: "US",
@@ -184,30 +229,36 @@ document.addEventListener("DOMContentLoaded", () => {
           )
       : "";
   }
+
   function getWhatsAppLinkForExotic(currencyCode, amount, operator) {
     const msg = `Olá, M&A Consultoria Câmbio! Tenho interesse na moeda exótica *${currencyCode}*.\nQuantidade: *${amount}*.\n\nPor favor, me ajude com a cotação.`;
-    return `https://api.whatsapp.com/send?phone=${operator}&text=${encodeURIComponent(
-      msg,
-    )}`;
+    return `https://api.whatsapp.com/send?phone=${operator}&text=${encodeURIComponent(msg)}`;
   }
+
+  // --- FETCH DE DADOS (GOOGLE SHEETS) ---
   async function fetchSheetRates() {
     if (dataStatus)
       dataStatus.innerHTML = `<i class="ph-bold ph-spinner animate-spin"></i> Carregando...`;
+
     try {
       const res = await fetch(SHEET_URL);
       const text = await res.text();
       const m = text.match(/setResponse\((.*)\);/);
       if (!m) throw new Error("Erro de leitura do Google Sheets");
+
       const json = JSON.parse(m[1]);
       const rows = json.table.rows || [];
+
       ratesPapel = {};
       ratesCartao = {};
       lastFetchTime = new Date();
-      for (let i = 1; i <= 12; i++) {
+
+      // Processa Papel Moeda (Colunas 7 e 8 - H e I)
+      for (let i = 1; i <= 18; i++) {
         const r = rows[i];
         if (!r) continue;
-        const m = r.c[7]?.v;
-        const v = r.c[8]?.v;
+        const m = r.c[7]?.v; // Moeda
+        const v = r.c[8]?.v; // Valor
         if (m && v) {
           ratesPapel[String(m).trim()] = {
             raw: Number(v),
@@ -215,11 +266,21 @@ document.addEventListener("DOMContentLoaded", () => {
           };
         }
       }
+
+      // --- LOGICA DE EXÓTICAS (Permitir taxas da planilha) ---
       Object.keys(PAPER_RULES).forEach((code) => {
-        if (PAPER_RULES[code].isExotic && !ratesPapel[code]) {
-          ratesPapel[code] = { isExotic: !0, raw: 0, display: "Consulta" };
+        if (PAPER_RULES[code].isExotic) {
+          if (ratesPapel[code]) {
+            // Se veio da planilha, mantém o valor mas marca como exótica
+            ratesPapel[code].isExotic = true;
+          } else {
+            // Se NÃO veio da planilha, cria o objeto zerado padrão
+            ratesPapel[code] = { isExotic: !0, raw: 0, display: "Consulta" };
+          }
         }
       });
+
+      // Processa Cartão (Colunas 9 e 10 - J e K)
       for (let i = 1; i <= 7; i++) {
         const r = rows[i];
         if (!r) continue;
@@ -232,23 +293,28 @@ document.addEventListener("DOMContentLoaded", () => {
           };
         }
       }
+
       if (dataStatus) {
         dataStatus.innerHTML = `<i class="ph-bold ph-check-circle"></i> Atualizado`;
         setTimeout(() => dataStatus.classList.add("hidden"), 1500);
       }
+
       if (currentMode) {
         available = currentMode === "papel" ? ratesPapel : ratesCartao;
         populateCurrencyList();
       }
+
       if (resultCard && !resultCard.classList.contains("hidden")) {
         console.log("🔄 Recalculando valores na tela com novas taxas...");
         updateDisplayConversion();
       }
+
       startUpdateTimer();
     } catch (err) {
       console.error("❌ Erro crítico ao buscar taxas:", err);
       ratesPapel = {};
       ratesCartao = {};
+
       if (dataStatus) {
         dataStatus.className =
           "text-xs text-red-600 font-bold bg-red-50 px-3 py-1 rounded-full border border-red-200 flex items-center gap-1 animate-pulse";
@@ -260,22 +326,26 @@ document.addEventListener("DOMContentLoaded", () => {
       startUpdateTimer();
     }
   }
+
   function startUpdateTimer() {
     if (countdownInterval) clearInterval(countdownInterval);
     updateTimerUI();
     countdownInterval = setInterval(updateTimerUI, 1000);
   }
+
   function updateTimerUI() {
     if (!lastFetchTime) return;
     const now = new Date();
     const remaining =
       UPDATE_INTERVAL_SECONDS - Math.floor((now - lastFetchTime) / 1000);
+
     if (lastUpdate)
       lastUpdate.textContent = `${lastFetchTime.toLocaleDateString("pt-BR", {
         timeZone: "America/Sao_Paulo",
       })} às ${lastFetchTime.toLocaleTimeString("pt-BR", {
         timeZone: "America/Sao_Paulo",
       })}`;
+
     if (nextUpdate) {
       if (remaining <= 0) {
         nextUpdate.textContent = "Atualizando...";
@@ -288,16 +358,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
+
   function calculateConversion(mode, currencyCode, amount) {
     const ratesObj = mode === "papel" ? ratesPapel : ratesCartao;
     const data = ratesObj[currencyCode];
+
     if (!data) return null;
+
     const rateWithIOF = data.raw;
     const baseRate = rateWithIOF / (1 + IOF_RATE);
     const iofValue = baseRate * IOF_RATE;
     const totalBRL = amount * rateWithIOF;
     const totalIOFValue = amount * iofValue;
     const conversionBase = amount * baseRate;
+
     return {
       mode,
       currencyCode,
@@ -312,6 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
       time: lastFetchTime || new Date(),
     };
   }
+
   function isBankHoliday(dateObj) {
     const day = dateObj.getDate();
     const month = dateObj.getMonth() + 1;
@@ -330,7 +405,9 @@ document.addEventListener("DOMContentLoaded", () => {
       "25/12",
       "31/12",
     ];
+
     if (fixedHolidays.includes(dateStr)) return !0;
+
     if (month === 12) {
       let lastDayYear = new Date(year, 11, 31);
       while (lastDayYear.getDay() === 0 || lastDayYear.getDay() === 6) {
@@ -338,6 +415,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (day === lastDayYear.getDate()) return !0;
     }
+
+    // Cálculo de Páscoa e Carnaval
     const a = year % 19;
     const b = Math.floor(year / 100);
     const c = year % 100;
@@ -352,35 +431,48 @@ document.addEventListener("DOMContentLoaded", () => {
     const m = Math.floor((a + 11 * h + 22 * l) / 451);
     const easterMonth = Math.floor((h + l - 7 * m + 114) / 31);
     const easterDay = ((h + l - 7 * m + 114) % 31) + 1;
+
     const checkMoveable = (diffDays) => {
       const target = new Date(year, easterMonth - 1, easterDay);
       target.setDate(target.getDate() + diffDays);
       return target.getDate() === day && target.getMonth() + 1 === month;
     };
-    if (checkMoveable(-48)) return !0;
-    if (checkMoveable(-47)) return !0;
-    if (checkMoveable(-2)) return !0;
-    if (checkMoveable(60)) return !0;
+
+    if (checkMoveable(-48)) return !0; // Carnaval (segunda)
+    if (checkMoveable(-47)) return !0; // Carnaval (terça)
+    if (checkMoveable(-2)) return !0; // Paixão de Cristo
+    if (checkMoveable(60)) return !0; // Corpus Christi
+
     return !1;
   }
+
   function isMarketOpen() {
     const nowSP = new Date(
       new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }),
     );
     const day = nowSP.getDay();
-    if (day === 0 || day === 6) return !1;
-    if (isBankHoliday(nowSP)) return !1;
+
+    if (day === 0 || day === 6) return !1; // Fim de semana fechado
+    if (isBankHoliday(nowSP)) return !1; // Feriado fechado
+
     const hour = nowSP.getHours();
     const minutes = nowSP.getMinutes();
+
+    // Regra: 09:30 as 18:00
     if (hour < 9) return !1;
     if (hour >= 18) return !1;
     if (hour === 9 && minutes < 30) return !1;
+
     return !0;
   }
+
   function validatePaperAmount(currency, amount) {
     if (currentMode !== "papel") return { valid: !0 };
+
     const rule = PAPER_RULES[currency];
-    if (!rule || rule.isExotic) return { valid: !0 };
+    if (!rule) return { valid: !0 }; // Se não tem regra, passa
+
+    // Valida múltiplo (minStep)
     if (amount % rule.minStep !== 0) {
       return {
         valid: !1,
@@ -389,15 +481,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return { valid: !0 };
   }
+
   function validateCardAmount(currency, amount) {
     if (currentMode !== "cartao") return { valid: !0 };
     if (!ratesCartao.USD || !ratesCartao[currency]) return { valid: !0 };
+
     const rateUSD = ratesCartao.USD.raw;
     const rateTarget = ratesCartao[currency].raw;
     const minReloadTarget = (CARD_RULES.MIN_RELOAD_USD * rateUSD) / rateTarget;
     const minNewTarget = (CARD_RULES.MIN_NEW_USD * rateUSD) / rateTarget;
     const minReloadDisplay = minReloadTarget.toFixed(2);
     const minNewDisplay = minNewTarget.toFixed(2);
+
     if (amount < minReloadTarget) {
       return {
         valid: !1,
@@ -413,20 +508,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return { valid: !0, isReloadOnly: !1 };
   }
+
   function updateInputHelper() {
     if (!amountInput || !fromSel.value) return;
     const currency = fromSel.value;
     const existingHint = document.getElementById("inputHint");
     if (existingHint) existingHint.remove();
-    if (
-      currentMode === "papel" &&
-      PAPER_RULES[currency] &&
-      !PAPER_RULES[currency].isExotic
-    ) {
+
+    if (currentMode === "papel" && PAPER_RULES[currency]) {
       const rule = PAPER_RULES[currency];
       amountInput.step = rule.minStep;
       amountInput.min = rule.minStep;
       amountInput.placeholder = `Múltiplos de ${rule.minStep}`;
+
       const hint = document.createElement("div");
       hint.id = "inputHint";
       hint.className =
@@ -439,6 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
       amountInput.placeholder = "Exemplo: 1000";
     }
   }
+
   function setMode(mode) {
     if (Object.keys(ratesPapel).length === 0) {
       fetchSheetRates().then(() => setModeUI(mode));
@@ -446,30 +541,29 @@ document.addEventListener("DOMContentLoaded", () => {
       setModeUI(mode);
     }
   }
+
   function setModeUI(mode) {
     currentMode = mode;
     available = mode === "papel" ? ratesPapel : ratesCartao;
+
     const activeClass =
       "flex-1 px-4 py-2 rounded-lg btn-primary font-semibold text-gray-900 text-sm transition-all flex items-center justify-center gap-2";
     const inactiveClass =
       "flex-1 px-4 py-2 rounded-lg border bg-white font-semibold text-gray-500 text-sm transition-all flex items-center justify-center gap-2";
+
     if (btnPapel)
       btnPapel.className = mode === "papel" ? activeClass : inactiveClass;
     if (btnCartao)
       btnCartao.className = mode === "cartao" ? activeClass : inactiveClass;
+
     populateCurrencyList();
     fillSelector();
     updateInputHelper();
+
     const currentCurrency = fromSel.value;
+
+    // Se tiver moeda e valor, já recalcula ao trocar de aba
     if (currentCurrency && available[currentCurrency] && amountInput.value) {
-      highlightSelectedCurrency(currentCurrency);
-      updateDisplayConversion();
-    } else if (
-      currentCurrency &&
-      currentMode === "papel" &&
-      PAPER_RULES[currentCurrency]?.isExotic &&
-      amountInput.value
-    ) {
       highlightSelectedCurrency(currentCurrency);
       updateDisplayConversion();
     } else {
@@ -478,6 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
       restoreBuyBtn();
     }
   }
+
   function restoreBuyBtn() {
     const currentBuyBtn = getEl("buyBtn");
     if (currentBuyBtn && originalBuyBtnHTML) {
@@ -492,9 +587,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const w = document.getElementById("closedWarning");
     if (w) w.remove();
+    // Remove também o aviso amarelo das exóticas se existir
+    const exoticWarning = document.querySelector(".exotic-warning");
+    if (exoticWarning) exoticWarning.remove();
   }
+
   if (btnPapel) btnPapel.onclick = () => setMode("papel");
   if (btnCartao) btnCartao.onclick = () => setMode("cartao");
+
+  // --- POPULATE COM SINCRONIZAÇÃO ATUALIZADA ---
   function populateCurrencyList() {
     currencyList.innerHTML = "";
     Object.keys(available).forEach((code) => {
@@ -504,17 +605,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const rateDisplay = isExoticDisplay
         ? "Sob Consulta"
         : `R$ ${formatRate(available[code].raw)}`;
+
       btn.className = `text-left p-3 rounded-lg border transition-all ${
         isSelected
           ? "border-[#d6c07a] bg-[#fffdf5] ring-2 ring-[#d6c07a]/20"
           : "border-gray-200 bg-white hover:bg-gray-50"
       }`;
+
       btn.innerHTML = `<div class="text-sm font-medium flex items-center text-gray-800">
       ${getFlagElement(code)} ${code}</div>
       <div class="text-xs ${
         isExoticDisplay ? "text-red-500" : "text-gray-500"
       } mt-1">${rateDisplay}</div>`;
 
+      // Sincronização ao clicar no Card
       btn.onclick = () => {
         fromSel.value = code;
         highlightSelectedCurrency(code);
@@ -530,91 +634,127 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     highlightSelectedCurrency(fromSel.value);
   }
+
   function highlightSelectedCurrency(code) {
     document.querySelectorAll("#currencyList button").forEach((btn) => {
-      btn.classList.remove("border-[#d6c07a]", "bg-[#fffdf5]");
+      btn.classList.remove(
+        "border-[#d6c07a]",
+        "bg-[#fffdf5]",
+        "ring-2",
+        "ring-[#d6c07a]/20",
+      );
       btn.classList.add("border-gray-200", "bg-white");
       if (code && btn.textContent.includes(code)) {
         btn.classList.remove("border-gray-200", "bg-white");
-        btn.classList.add("border-[#d6c07a]", "bg-[#fffdf5]");
+        btn.classList.add(
+          "border-[#d6c07a]",
+          "bg-[#fffdf5]",
+          "ring-2",
+          "ring-[#d6c07a]/20",
+        );
       }
     });
   }
+
+  // --- SELECT COM SINCRONIZAÇÃO ATUALIZADA ---
   function fillSelector() {
     const current = fromSel.value;
     fromSel.disabled = false;
     fromSel.innerHTML =
-      '<option value="" disabled selected>Selecione...</option>';
+      '<option value="" disabled selected>Selecione a moeda...</option>';
+
     Object.keys(available).forEach((code) => {
       const opt = document.createElement("option");
       opt.value = code;
       opt.textContent = `${getFlagEmoji(code)} ${code}`;
       fromSel.appendChild(opt);
     });
+
     if (current && available[current]) fromSel.value = current;
+
+    // Sincronização ao mudar o Select
+    fromSel.onchange = () => {
+      const selectedCode = fromSel.value;
+      highlightSelectedCurrency(selectedCode);
+      updateInputHelper();
+
+      if (amountInput.value > 0) {
+        updateDisplayConversion();
+      }
+    };
   }
-  fromSel.onchange = () => {
-    const selectedCode = fromSel.value;
-    highlightSelectedCurrency(selectedCode);
-    updateInputHelper();
 
-    if (amountInput.value > 0) {
-      updateDisplayConversion();
-    }
-  };
-
-  function displayExoticWarning(currencyCode, amount) {
+  // --- AVISO E BOTÃO PARA EXÓTICAS (MODIFICADO) ---
+  function displayExoticWarning(currencyCode, amount, totalBRL) {
     const currencyName = PAPER_RULES[currencyCode].name;
     const oldBuyBtn = getEl("buyBtn");
-    resultCard.classList.remove("hidden");
-    calcDetails.innerHTML = "";
-    comparisonGrid.innerHTML = "";
-    resultValue.textContent = "Consulta";
-    const now = new Date();
-    quoteTime.innerHTML = `<i class="ph-bold ph-warning"></i> Moeda Exótica - Cotação: ${now.toLocaleDateString(
-      "pt-BR",
-      { timeZone: "America/Sao_Paulo" },
-    )} às ${now.toLocaleTimeString("pt-BR", {
-      timeZone: "America/Sao_Paulo",
-    })}`;
-    calcDetails.innerHTML = `<div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg space-y-3"><div class="text-sm font-bold text-yellow-800 flex items-center gap-2"><i class="ph-bold ph-warning-circle text-xl"></i> Cotação especial necessária</div><p class="text-sm text-yellow-700">O ${currencyName} é uma moeda exótica e sua taxa é ajustada mediante consulta.</p><p class="text-xs text-yellow-700 font-semibold">Valor desejado: ${amount} ${currencyCode}</p></div>`;
-    oldBuyBtn.outerHTML = `<button id="buyBtn" class="group mt-4 w-full h-14 px-4 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2"><i class="ph-bold ph-whatsapp-logo text-xl"></i> Falar com Especialista</button>`;
+    const formattedTotal = formatBRL(totalBRL);
+
+    // Remove aviso anterior para não duplicar
+    const prevWarning = document.querySelector(".exotic-warning");
+    if (prevWarning) prevWarning.remove();
+
+    // 1. Injeta o aviso Amarelo no topo dos detalhes (sem apagar os calculos)
+    const warningHTML = `
+      <div class="exotic-warning mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg animate-pulse">
+        <div class="text-sm font-bold text-yellow-800 flex items-center gap-2">
+          <i class="ph-bold ph-warning-circle text-xl"></i> Cotação Sujeita a Confirmação
+        </div>
+        <p class="text-xs text-yellow-700 mt-1">
+          O valor de <strong>${formattedTotal}</strong> é uma estimativa baseada na taxa de fechamento. 
+          Por ser uma moeda exótica (${currencyName}), a operação deve ser confirmada diretamente com a mesa.
+        </p>
+      </div>`;
+
+    calcDetails.insertAdjacentHTML("afterbegin", warningHTML);
+
+    // 2. Troca o botão de "Solicitar" pelo de "WhatsApp"
+    oldBuyBtn.outerHTML = `<button id="buyBtn" class="group mt-4 w-full h-14 px-4 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2"><i class="ph-bold ph-whatsapp-logo text-xl"></i> Confirmar no WhatsApp</button>`;
+
     const newBtn = getEl("buyBtn");
     newBtn.onclick = (e) => {
       e.preventDefault();
       const randomIndex = Math.random() < 0.5 ? 0 : 1;
+      const msg = `Olá! Vi no site a simulação de *${amount} ${currencyCode}* (aprox. ${formattedTotal}).\nComo é uma moeda exótica, gostaria de confirmar a taxa e disponibilidade para fechar.`;
+
       window.open(
-        getWhatsAppLinkForExotic(currencyCode, amount, OPERATORS[randomIndex]),
+        `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${encodeURIComponent(msg)}`,
         "_blank",
       );
-      setTimeout(() => window.location.reload(), 1000);
+      // Reload opcional para limpar a tela após clique
+      setTimeout(() => window.location.reload(), 2000);
     };
   }
+
+  // --- FUNÇÃO DE EXIBIÇÃO PRINCIPAL (ATUALIZADA) ---
   function updateDisplayConversion() {
     const from = fromSel.value;
     const amount = parseFloat(amountInput.value);
+
     if (!currentMode || !from || !amount || amount <= 0) {
       resultCard.classList.add("hidden");
       return;
     }
-    const isExotic = PAPER_RULES[from] && PAPER_RULES[from].isExotic;
-    if (isExotic && currentMode === "papel") {
-      displayExoticWarning(from, amount);
-      return;
-    }
+
+    // Restaura botão padrão antes de tudo
     restoreBuyBtn();
+
+    // 1. Validação de Notas (Inclui Exóticas agora)
     const validation = validatePaperAmount(from, amount);
     if (!validation.valid) {
       showError(validation.msg);
       resultCard.classList.add("hidden");
       return;
     }
+
+    // 2. Validação de Cartão
     const cardValidation = validateCardAmount(from, amount);
     if (!cardValidation.valid) {
       showError(cardValidation.msg);
       resultCard.classList.add("hidden");
       return;
     }
+
     if (cardValidation.isReloadOnly) {
       const warningDiv = document.getElementById("errorMsg");
       warningDiv.innerHTML = `<i class="ph-bold ph-warning"></i> ${cardValidation.warningMsg}`;
@@ -623,11 +763,24 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       document.getElementById("errorMsg").classList.add("hidden");
     }
+
+    // 3. Cálculo
     const res = calculateConversion(currentMode, from, amount);
+
+    // Se não tiver taxa (ou for 0), esconde
+    if (!res || res.VET === 0) {
+      // Se for exótica e não tiver taxa na planilha, cai aqui.
+      // Se quiser tratar esse erro específico, pode por um aviso.
+      showError("Taxa não disponível para esta moeda no momento.");
+      resultCard.classList.add("hidden");
+      return;
+    }
+
     currentQuote = res;
     resultCard.classList.remove("hidden");
     resultCard.classList.add("fade-in");
     resultValue.textContent = formatBRL(res.totalBRL);
+
     if (quoteTime)
       quoteTime.innerHTML = `<i class="ph-bold ph-clock"></i> Cotação: ${res.time.toLocaleDateString(
         "pt-BR",
@@ -635,7 +788,10 @@ document.addEventListener("DOMContentLoaded", () => {
       )} às ${res.time.toLocaleTimeString("pt-BR", {
         timeZone: "America/Sao_Paulo",
       })}`;
+
+    // Renderiza Detalhes
     if (calcDetails) {
+      const iofPct = (res.iofRate * 100).toFixed(2).replace(".", ",");
       calcDetails.innerHTML = `
         <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">Valor Líquido <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor total convertido sem impostos</span></span></span><span class="font-mono">${formatBRL(
           res.conversionBase,
@@ -643,59 +799,76 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">Cotação Turismo<span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor unitário da moeda sem impostos</span></span></span><span class="font-mono">R$ ${formatRate(
           res.cotaçãoBase,
         )}</span></div>
-        <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">IOF (${(
-          res.iofRate * 100
-        )
-          .toFixed(2)
-          .replace(
-            ".",
-            ",",
-          )}%) <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Imposto obrigatório sobre Operações Financeiras</span></span></span><span class="font-mono">${formatBRL(
+        <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">IOF (${iofPct}%) <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Imposto obrigatório sobre Operações Financeiras</span></span></span><span class="font-mono">${formatBRL(
           res.totalIOFValue,
         )}</span></div>
         <div class="flex justify-between text-sm pt-1"><span class="text-gray-600 flex items-center gap-1">Taxa VET Unitária <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor Efetivo Total - Inclui câmbio, IOF e todas as taxas aplicáveis</span></span></span><span class="font-mono font-bold text-[#d6c07a]">R$ ${formatRate(
           res.VET,
         )}</span></div>`;
     }
+
     updateComparison(from, amount);
-    const isOpen = isMarketOpen();
-    const btnSolicitar = document.getElementById("buyBtn");
-    const newBtn = btnSolicitar.cloneNode(!0);
-    btnSolicitar.parentNode.replaceChild(newBtn, btnSolicitar);
-    const existingWarning = document.getElementById("closedWarning");
-    if (existingWarning) existingWarning.remove();
-    if (!isOpen) {
-      newBtn.className =
-        "group mt-4 w-full h-14 px-4 rounded-xl bg-gray-400 cursor-not-allowed text-white font-bold text-lg shadow-none flex items-center justify-center gap-2";
-      newBtn.innerHTML = `<i class="ph-bold ph-clock-afternoon"></i> Atendimento Encerrado`;
-      newBtn.onclick = (e) => {
-        e.preventDefault();
-        alert(
-          "Para solicitar e finalizar a compra da moeda, nosso atendimento funciona de Segunda a Sexta, das 09h30 às 18h00. Fora desse horário (período noturno), finais de semana e feriados, o sistema de solicitação permanece fechado.",
-        );
-      };
-      const warningBox = document.createElement("div");
-      warningBox.id = "closedWarning";
-      warningBox.className =
-        "mt-3 text-center text-xs text-red-500 font-medium bg-red-50 p-2 rounded border border-red-100 animate-pulse";
-      warningBox.innerHTML =
-        "O mercado está fechado. Simulações liberadas, solicitações/compras apenas em horário comercial.";
-      newBtn.parentNode.appendChild(warningBox);
+
+    // 4. VERIFICAÇÃO SE É EXÓTICA
+    const isExotic = PAPER_RULES[from] && PAPER_RULES[from].isExotic;
+
+    if (isExotic && currentMode === "papel") {
+      // Se for exótica, exibe o aviso e troca o botão para WhatsApp
+      displayExoticWarning(from, amount, res.totalBRL);
     } else {
-      newBtn.className =
-        "group mt-4 w-full h-14 px-4 rounded-xl bg-gold hover:bg-gold-hover text-gray-700 font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2";
-      newBtn.innerHTML = `Prosseguir com a Compra <i class="ph-bold ph-arrow-right text-xl transition-transform group-hover:translate-x-1.5"></i>`;
-      newBtn.onclick = (e) => {
-        e.preventDefault();
-        openModal();
-      };
+      // FLUXO NORMAL (Moedas Comuns)
+      const isOpen = isMarketOpen();
+      const btnSolicitar = document.getElementById("buyBtn");
+
+      // Se o botão estava como WhatsApp (de uma simulação anterior), restaura
+      if (btnSolicitar.innerText.includes("WhatsApp")) {
+        restoreBuyBtn();
+      }
+
+      const currentBtn = getEl("buyBtn");
+      const newBtn = currentBtn.cloneNode(!0);
+      currentBtn.parentNode.replaceChild(newBtn, currentBtn);
+
+      // Remove aviso de fechado se existir
+      const existingWarning = document.getElementById("closedWarning");
+      if (existingWarning) existingWarning.remove();
+
+      if (!isOpen) {
+        newBtn.className =
+          "group mt-4 w-full h-14 px-4 rounded-xl bg-gray-400 cursor-not-allowed text-white font-bold text-lg shadow-none flex items-center justify-center gap-2";
+        newBtn.innerHTML = `<i class="ph-bold ph-clock-afternoon"></i> Atendimento Encerrado`;
+        newBtn.onclick = (e) => {
+          e.preventDefault();
+          alert(
+            "Para solicitar e finalizar a compra da moeda, nosso atendimento funciona de Segunda a Sexta, das 09h30 às 18h00. Fora desse horário (período noturno), finais de semana e feriados, o sistema de solicitação permanece fechado.",
+          );
+        };
+        const warningBox = document.createElement("div");
+        warningBox.id = "closedWarning";
+        warningBox.className =
+          "mt-3 text-center text-xs text-red-500 font-medium bg-red-50 p-2 rounded border border-red-100 animate-pulse";
+        warningBox.innerHTML =
+          "O mercado está fechado. Simulações liberadas, solicitações apenas em horário comercial.";
+        newBtn.parentNode.appendChild(warningBox);
+      } else {
+        newBtn.className =
+          "group mt-4 w-full h-14 px-4 rounded-xl bg-gold hover:bg-gold-hover text-gray-700 font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2";
+        newBtn.innerHTML = `Solicitar Câmbio <i class="ph-bold ph-arrow-right text-xl transition-transform group-hover:translate-x-1.5"></i>`;
+        newBtn.onclick = (e) => {
+          e.preventDefault();
+          openModal();
+        };
+      }
+      window.buyBtn = newBtn;
     }
-    window.buyBtn = newBtn;
   }
+
   function updateComparison(currency, amount) {
     comparisonGrid.innerHTML = "";
     ["papel", "cartao"].forEach((mode) => {
-      if (PAPER_RULES[currency]?.isExotic && mode === "papel") return;
+      // Exóticas só existem no papel, então ignora cartao
+      if (PAPER_RULES[currency]?.isExotic && mode === "cartao") return;
+
       const res = calculateConversion(mode, currency, amount);
       const isCurrent = mode === currentMode;
       const titleText = mode === "papel" ? "Papel Moeda" : "Cartão Pré-pago";
@@ -706,9 +879,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const borderClass = isCurrent
         ? "border-[#d6c07a] bg-[#fffdf5] ring-1 ring-[#d6c07a]/20 shadow-md"
         : "border-gray-200 bg-white hover:border-gray-300";
+
       const div = document.createElement("div");
       div.className = `p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${borderClass}`;
-      if (res) {
+
+      if (res && res.VET > 0) {
         div.innerHTML = `
           <div class="flex justify-between items-start mb-4"><div class="font-bold text-gray-800 flex items-center gap-2">${icon} ${titleText}</div>${
             isCurrent
@@ -748,21 +923,27 @@ document.addEventListener("DOMContentLoaded", () => {
       comparisonGrid.appendChild(div);
     });
   }
+
   if (convertBtn) {
     convertBtn.onclick = async () => {
       if (!currentMode) return showError("Selecione Papel ou Cartão.");
       if (!fromSel.value || !amountInput.value)
         return showError("Preencha os campos.");
+
       const originalText = convertBtn.innerText;
       convertBtn.innerText = "Atualizando...";
       convertBtn.disabled = !0;
+
       await fetchSheetRates();
       updateDisplayConversion();
+
       convertBtn.innerText = originalText;
       convertBtn.disabled = !1;
     };
   }
+
   if (clearBtn) clearBtn.onclick = () => window.location.reload();
+
   function showError(msg) {
     if (errorMsg) {
       errorMsg.innerHTML = `<i class="ph-bold ph-warning-circle"></i> ${msg}`;
@@ -772,14 +953,17 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(msg);
     }
   }
+
   function openModal() {
     if (!currentQuote) return showError("Faça uma cotação antes.");
+
     modalCurrencyAmount.textContent = currentQuote.amount.toLocaleString(
       "pt-BR",
       { minimumFractionDigits: 2 },
     );
     modalCurrencyCode.textContent = currentQuote.currencyCode;
     modalTotalBRL.textContent = formatBRL(currentQuote.totalBRL);
+
     if (modalDetails) {
       const iofPct = (currentQuote.iofRate * 100).toFixed(2).replace(".", ",");
       modalDetails.innerHTML = `
@@ -795,6 +979,7 @@ document.addEventListener("DOMContentLoaded", () => {
             currentQuote.VET,
           )}</span></div>
         </div>`;
+
       const btn = document.getElementById("toggleRatesBtn");
       const container = document.getElementById("ratesContainer");
       if (btn && container) {
@@ -806,40 +991,50 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       }
     }
+
     if (operationalInfo) {
       operationalInfo.innerHTML = `<div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2 text-justify"><p class="font-bold text-gray-700 mb-1 flex items-center gap-1"><i class="ph-bold ph-info"></i> Informações Importantes:</p><p>1. O VET (Valor Efetivo Total) representa o custo final, incluindo câmbio, impostos (IOF) e tarifas.</p><p>2. A operação está sujeita a disponibilidade de estoque e validação de dados/documento de identificação (é obrigatório o envio de documento válido como RG, RNE ou CNH).</p><p>3. Valores/taxas sujeitos a alteração até o fechamento efetivo da operação com um de nossos operadores.</p><p>4. Câmbio Delivery: Grátis para operações acima de USD 500,00 (ou equivalente em outra moeda). Para valores menores, taxa de R$ 30,00 (consulte a cobertura do seu CEP e a disponibilidade diretamente com um especialista).</p></div>`;
     }
+
     budgetForm.classList.remove("hidden");
     successStep.classList.add("hidden");
     budgetModal.classList.remove("hidden");
   }
+
   function closeModal() {
     budgetModal.classList.add("hidden");
   }
+
   if (buyBtn)
     buyBtn.onclick = (e) => {
       e.preventDefault();
       openModal();
     };
+
   if (closeModalBtn) closeModalBtn.onclick = closeModal;
   window.addEventListener("click", (e) => {
     if (e.target == budgetModal) closeModal();
   });
+
   if (budgetForm) {
     budgetForm.onsubmit = async (e) => {
       e.preventDefault();
       const name = clientName.value;
       const phone = clientPhone.value;
       const email = getEl("clientEmail").value;
+
       if (!name || !phone || !email || !currentQuote)
         return showError("Por favor, preencha todos os campos.");
+
       const btn = budgetForm.querySelector('button[type="submit"]');
       const originalContent = btn.innerHTML;
       btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-xl"></i> Enviando...`;
       btn.disabled = !0;
+
       try {
         const isDelivery =
           deliveryCheck && deliveryCheck.checked ? "SIM" : "NÃO";
+
         let templateParams = {
           currency_amount: currentQuote.amount.toLocaleString("pt-BR", {
             minimumFractionDigits: 2,
@@ -857,7 +1052,7 @@ document.addEventListener("DOMContentLoaded", () => {
           client_name: name,
           client_email: email,
           client_phone: phone,
-          client_cpf: getEl(" ").value,
+          client_cpf: getEl("clientCPF").value,
           client_rg: getEl("clientRG").value,
           client_birth: getEl("clientBirth").value,
           client_birth_city: getEl("clientBirthCity").value,
@@ -873,6 +1068,7 @@ document.addEventListener("DOMContentLoaded", () => {
           obs_documento:
             "Cliente instruído a enviar documentação via WhatsApp ou E-mail.",
         };
+
         const sendAdmin = emailjs.send(
           SERVICE_ID,
           TEMPLATE_ADMIN,
@@ -882,12 +1078,15 @@ document.addEventListener("DOMContentLoaded", () => {
           ...templateParams,
           to_email: email,
         });
+
         await Promise.all([sendAdmin, sendClient]);
+
         if (typeof gtag === "function") {
           gtag("event", "conversion", {
             send_to: "AW-738500529/ZX95CJWVhM4bELG_kuAC",
           });
         }
+
         budgetForm.classList.add("hidden");
         successStep.classList.remove("hidden");
         setupFinalWhats(name);
@@ -902,6 +1101,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
   }
+
   function setupFinalWhats(name) {
     if (!finalWhatsAppBtn || !currentQuote) return;
     finalWhatsAppBtn.onclick = () => {
@@ -912,6 +1112,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const iofPercentage = (currentQuote.iofRate * 100)
         .toFixed(2)
         .replace(".", ",");
+      const client_cpf = getEl("clientCPF").value; // Correção para pegar o CPF correto
+
       const msg = `Olá, M&A Consultoria Câmbio! Meu nome é *${name} (CPF ${client_cpf})*.\nAcabei de enviar meus dados pelo Site Conversor.\n\nGostaria de prosseguir com a operação:\n*MODALIDADE: ${modeText}*\n*VALOR: ${
         currentQuote.amount
       } ${currentQuote.currencyCode}*\n- Cotação Turismo: R$ ${formatRate(
@@ -919,6 +1121,7 @@ document.addEventListener("DOMContentLoaded", () => {
       )}\n- IOF: ${iofPercentage}%\n\n*👉🏻 TOTAL A PAGAR: ${formatBRL(
         currentQuote.totalBRL,
       )}*\n\n*📎 Estou enviando a foto do meu documento (CNH, RG ou RNE) por aqui para finalizar meu cadastro.*`;
+
       window.open(
         `https://api.whatsapp.com/send?phone=${selectedOperator}&text=${encodeURIComponent(
           msg,
@@ -929,14 +1132,17 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 });
+
 function openInfoModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.remove("hidden");
 }
+
 function closeInfoModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.add("hidden");
 }
+
 function toggleFaq(button) {
   const content = button.nextElementSibling;
   const icon = button.querySelector("i");
@@ -952,6 +1158,7 @@ function toggleFaq(button) {
     button.setAttribute("aria-expanded", "false");
   }
 }
+
 document.addEventListener("keydown", function (event) {
   if (event.key === "Escape") {
     closeInfoModal("termsModal");
