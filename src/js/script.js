@@ -602,9 +602,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const btn = document.createElement("button");
       const isSelected = fromSel.value === code;
       const isExoticDisplay = PAPER_RULES[code]?.isExotic;
-      const rateDisplay = isExoticDisplay
-        ? "Sob Consulta"
-        : `R$ ${formatRate(available[code].raw)}`;
+
+      // ALTERAÇÃO AQUI: Mostra a taxa para TODOS, mesmo se for exótica
+      const rateDisplay = `R$ ${formatRate(available[code].raw)}`;
 
       btn.className = `text-left p-3 rounded-lg border transition-all ${
         isSelected
@@ -612,13 +612,13 @@ document.addEventListener("DOMContentLoaded", () => {
           : "border-gray-200 bg-white hover:bg-gray-50"
       }`;
 
+      // Mantive a cor vermelha para destacar que é exótica, mas agora mostrando o número
       btn.innerHTML = `<div class="text-sm font-medium flex items-center text-gray-800">
       ${getFlagElement(code)} ${code}</div>
       <div class="text-xs ${
-        isExoticDisplay ? "text-red-500" : "text-gray-500"
+        isExoticDisplay ? "text-red-500 font-bold" : "text-gray-500"
       } mt-1">${rateDisplay}</div>`;
 
-      // Sincronização ao clicar no Card
       btn.onclick = () => {
         fromSel.value = code;
         highlightSelectedCurrency(code);
@@ -685,16 +685,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- AVISO E BOTÃO PARA EXÓTICAS (MODIFICADO) ---
-  function displayExoticWarning(currencyCode, amount, totalBRL) {
+  function displayExoticWarning(currencyCode, amount, res) {
     const currencyName = PAPER_RULES[currencyCode].name;
     const oldBuyBtn = getEl("buyBtn");
-    const formattedTotal = formatBRL(totalBRL);
 
-    // Remove aviso anterior para não duplicar
+    // Formata os valores usando os dados que vieram do cálculo (res)
+    const formattedTotal = formatBRL(res.totalBRL);
+    const formattedVET = formatRate(res.VET);
+    const formattedIOF = formatBRL(res.totalIOFValue);
+    const formattedBase = formatRate(res.cotaçãoBase);
+
+    // VERIFICA SE ESTÁ ABERTO
+    const isOpen = isMarketOpen();
+
     const prevWarning = document.querySelector(".exotic-warning");
     if (prevWarning) prevWarning.remove();
 
-    // 1. Injeta o aviso Amarelo no topo dos detalhes (sem apagar os calculos)
+    const prevClosed = document.getElementById("closedWarning");
+    if (prevClosed) prevClosed.remove();
+
+    // 1. Injeta o aviso Amarelo
     const warningHTML = `
       <div class="exotic-warning mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg animate-pulse">
         <div class="text-sm font-bold text-yellow-800 flex items-center gap-2">
@@ -708,22 +718,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
     calcDetails.insertAdjacentHTML("afterbegin", warningHTML);
 
-    // 2. Troca o botão de "Solicitar" pelo de "WhatsApp"
-    oldBuyBtn.outerHTML = `<button id="buyBtn" class="group mt-4 w-full h-14 px-4 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2"><i class="ph-bold ph-whatsapp-logo text-xl"></i> Confirmar no WhatsApp</button>`;
+    // 2. LÓGICA DO BOTÃO
+    if (isOpen) {
+      oldBuyBtn.outerHTML = `<button id="buyBtn" class="group mt-4 w-full h-14 px-4 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2"><i class="ph-bold ph-whatsapp-logo text-xl"></i> Confirmar no WhatsApp</button>`;
 
-    const newBtn = getEl("buyBtn");
-    newBtn.onclick = (e) => {
-      e.preventDefault();
-      const randomIndex = Math.random() < 0.5 ? 0 : 1;
-      const msg = `Olá! Vi no site a simulação de *${amount} ${currencyCode}* (aprox. ${formattedTotal}).\nComo é uma moeda exótica, gostaria de confirmar a taxa e disponibilidade para fechar.`;
+      const newBtn = getEl("buyBtn");
+      newBtn.onclick = (e) => {
+        e.preventDefault();
+        const randomIndex = Math.random() < 0.5 ? 0 : 1;
 
-      window.open(
-        `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${encodeURIComponent(msg)}`,
-        "_blank",
-      );
-      // Reload opcional para limpar a tela após clique
-      setTimeout(() => window.location.reload(), 2000);
-    };
+        // --- MENSAGEM DETALHADA AQUI ---
+        const msg = `Olá, M&A Consultoria! Realizei uma simulação de moeda exótica no site:
+          
+*MOEDA:* ${currencyCode} (${currencyName})
+*QUANTIDADE:* ${amount}
+
+*DETALHES DA ESTIMATIVA:*
+📉 Cotação Base: R$ ${formattedBase}
+💸 IOF: ${formattedIOF}
+📊 VET Final: R$ ${formattedVET}
+
+*💰 TOTAL ESTIMADO: ${formattedTotal}*
+
+Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.`;
+
+        window.open(
+          `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${encodeURIComponent(msg)}`,
+          "_blank",
+        );
+        setTimeout(() => window.location.reload(), 2000);
+      };
+    } else {
+      oldBuyBtn.outerHTML = `<button id="buyBtn" class="group mt-4 w-full h-14 px-4 rounded-xl bg-gray-400 cursor-not-allowed text-white font-bold text-lg shadow-none flex items-center justify-center gap-2"><i class="ph-bold ph-clock-afternoon"></i> Atendimento Encerrado</button>`;
+
+      const newBtn = getEl("buyBtn");
+      newBtn.onclick = (e) => {
+        e.preventDefault();
+        alert(
+          "Para solicitar e finalizar a compra da moeda, nosso atendimento funciona de Segunda a Sexta, das 09h30 às 18h00. Fora desse horário, o sistema permanece fechado.",
+        );
+      };
+
+      const warningBox = document.createElement("div");
+      warningBox.id = "closedWarning";
+      warningBox.className =
+        "mt-3 text-center text-xs text-red-500 font-medium bg-red-50 p-2 rounded border border-red-100 animate-pulse";
+      warningBox.innerHTML =
+        "O mercado está fechado. Solicitações apenas em horário comercial.";
+      newBtn.parentNode.appendChild(warningBox);
+    }
   }
 
   // --- FUNÇÃO DE EXIBIÇÃO PRINCIPAL (ATUALIZADA) ---
@@ -814,7 +857,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isExotic && currentMode === "papel") {
       // Se for exótica, exibe o aviso e troca o botão para WhatsApp
-      displayExoticWarning(from, amount, res.totalBRL);
+      displayExoticWarning(from, amount, res);
     } else {
       // FLUXO NORMAL (Moedas Comuns)
       const isOpen = isMarketOpen();
