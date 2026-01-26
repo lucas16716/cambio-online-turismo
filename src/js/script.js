@@ -711,8 +711,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <i class="ph-bold ph-warning-circle text-xl"></i> Cotação Sujeita a Confirmação
         </div>
         <p class="text-xs text-yellow-700 mt-1">
-          O valor de <strong>${formattedTotal}</strong> é uma estimativa baseada na taxa de fechamento. 
-          Por ser uma moeda exótica (${currencyName}), a operação deve ser confirmada diretamente com a mesa e a cotação pode sofrer alterações mediante consulta.
+          O valor de <strong>${formattedTotal}</strong> é uma estimativa baseada na taxa de fechamento e a cotação pode sofrer alterações por ser uma moeda exótica (${currencyName}), portanto a operação deve ser confirmada diretamente com a mesa.
         </p>
       </div>`;
 
