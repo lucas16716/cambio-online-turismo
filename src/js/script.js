@@ -595,7 +595,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnPapel) btnPapel.onclick = () => setMode("papel");
   if (btnCartao) btnCartao.onclick = () => setMode("cartao");
 
-  // --- POPULATE COM SINCRONIZAÇÃO ATUALIZADA ---
   function populateCurrencyList() {
     currencyList.innerHTML = "";
     Object.keys(available).forEach((code) => {
@@ -603,21 +602,30 @@ document.addEventListener("DOMContentLoaded", () => {
       const isSelected = fromSel.value === code;
       const isExoticDisplay = PAPER_RULES[code]?.isExotic;
 
-      // ALTERAÇÃO AQUI: Mostra a taxa para TODOS, mesmo se for exótica
-      const rateDisplay = `R$ ${formatRate(available[code].raw)}`;
+      // Valor da taxa
+      const rateValue = `R$ ${formatRate(available[code].raw)}`;
 
-      btn.className = `text-left p-3 rounded-lg border transition-all ${
+      // Se for exótica, adiciona o texto "Sob Consulta" pequeno embaixo
+      const rateDisplay = isExoticDisplay
+        ? `<div class="flex flex-col items-start">
+             <span class="text-red-500 font-bold">${rateValue}</span>
+             <span class="text-[9px] uppercase tracking-wide text-red-400 bg-red-50 px-1.5 py-0.5 rounded mt-0.5">Sob Consulta</span>
+           </div>`
+        : `<span class="text-gray-500">${rateValue}</span>`;
+
+      btn.className = `text-left p-3 rounded-lg border transition-all h-full flex flex-col justify-center ${
         isSelected
           ? "border-[#d6c07a] bg-[#fffdf5] ring-2 ring-[#d6c07a]/20"
           : "border-gray-200 bg-white hover:bg-gray-50"
       }`;
 
-      // Mantive a cor vermelha para destacar que é exótica, mas agora mostrando o número
-      btn.innerHTML = `<div class="text-sm font-medium flex items-center text-gray-800">
-      ${getFlagElement(code)} ${code}</div>
-      <div class="text-xs ${
-        isExoticDisplay ? "text-red-500 font-bold" : "text-gray-500"
-      } mt-1">${rateDisplay}</div>`;
+      btn.innerHTML = `
+        <div class="text-sm font-medium flex items-center text-gray-800 mb-1">
+          ${getFlagElement(code)} ${code}
+        </div>
+        <div class="text-xs mt-auto">
+          ${rateDisplay}
+        </div>`;
 
       btn.onclick = () => {
         fromSel.value = code;
