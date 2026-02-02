@@ -19,7 +19,7 @@
 
 <h2 id="projeto">PROJETO</h2>
 
-> Este sistema foi desenvolvido para transpor as necessidades específicas da M&A Consultoria para o ambiente digital. Diferente de conversores genéricos, esta aplicação segue normas bancárias reais e regras de negócio rigorosas, onde toda a lógica e interações acontecem no navegador, sem recarregar a página, seguindo o conceito de SPA-like, mas sem uso de frameworks.
+Este sistema foi desenvolvido para transpor as necessidades específicas da M&A Consultoria para o ambiente digital. Diferente de conversores genéricos, esta aplicação segue normas bancárias reais e regras de negócio rigorosas, onde toda a lógica e interações acontecem no navegador, sem recarregar a página, seguindo o conceito de SPA-like, mas sem uso de frameworks.
 
 🌐 <a href="https://cotacaoonline.maconsultoriacambio.com.br/">Acesse a aplicação</a>
 
@@ -83,7 +83,7 @@
 
 <h2>📝 LICENÇA</h2>
 
-Este projeto possui uma **Licença Personalizada**. O código está disponível para consulta pública e portfólio, porém é proibida a sua reprodução, cópia ou uso comercial sem autorização expressa de **Lucas Code** e **M&A Consultoria Câmbio**. Confira os detalhes no arquivo [LICENSE].
+Este projeto possui uma **Licença Personalizada**. O código está disponível para consulta pública e portfólio, porém é proibida a sua reprodução, cópia ou uso comercial sem autorização expressa de **Lucas Code** e **M&A Consultoria Câmbio**. Confira os detalhes no arquivo.
 
 <h2>🧑🏻‍💻 AUTOR</h2> 
 <p>Desenvolvido por <a href="https://bio.site/lucascode">Lucas Code</a>.</p>
