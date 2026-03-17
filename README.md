@@ -2,7 +2,7 @@
 
 <img src="assets/img/logo-MA.ico" width="110" height="110" alt="Logo M&A Consultoria Câmbio"/>
 
-# Plataforma de Câmbio • M&A Consultoria
+# Sistema de Câmbio Online • M&A Consultoria
 
 **Plataforma de automação de operações cambiais para corretora de câmbio turismo**
 
