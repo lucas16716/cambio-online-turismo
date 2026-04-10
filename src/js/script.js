@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
   const IOF_RATE = 0.035;
   const UPDATE_INTERVAL_SECONDS = 600;
-  const SERVICE_ID = "service_vfriyz8";
+  const SERVICE_ID = "service_bka9lcb";
   const TEMPLATE_ADMIN = "template_9fzmu0n";
   const TEMPLATE_CLIENTE = "template_u5saecn";
   const OPERATORS = ["5511953505626", "5511938059556"];
