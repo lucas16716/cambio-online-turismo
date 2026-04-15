@@ -732,7 +732,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const newBtn = getEl("buyBtn");
       newBtn.onclick = (e) => {
         e.preventDefault();
-        const randomIndex = Math.random() < 0.5 ? 0 : 1;
+        /*const randomIndex = Math.random() < 0.5 ? 0 : 1;*/
+        const randomIndex = Date.now() % 2;
+        const selectedOperator = OPERATORS[randomIndex];
 
         // --- MENSAGEM DETALHADA AQUI ---
         const msg = `Olá, M&A Consultoria! Realizei uma simulação de moeda exótica no site:
