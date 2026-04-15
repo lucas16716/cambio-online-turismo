@@ -1155,7 +1155,15 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
   function setupFinalWhats(name) {
     if (!finalWhatsAppBtn || !currentQuote) return;
     finalWhatsAppBtn.onclick = () => {
-      const randomIndex = Math.random() < 0.5 ? 0 : 1;
+      /*const randomIndex = Math.random() < 0.5 ? 0 : 1;*/
+      const phoneDigits = getEl("clientPhone").value.replace(/\D/g, "");
+      let randomIndex = 0;
+      if (phoneDigits.length > 0) {
+        const lastDigit = parseInt(phoneDigits.charAt(phoneDigits.length - 1), 10);
+        randomIndex = lastDigit % 2;
+      } else {
+        randomIndex = Date.now() % 2;
+      }
       const selectedOperator = OPERATORS[randomIndex];
       const modeText =
         currentQuote.mode === "papel" ? "Papel Moeda 💵" : "Cartão 💳";
