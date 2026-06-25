@@ -185,10 +185,10 @@
         <div class="text-sm font-bold text-[#d6c07a] mb-1 flex items-center justify-center md:justify-start gap-2"><span>M&A CONSULTORIA CÂMBIO <i class="ph-bold ph-currency-circle-dollar"></i></span></div>
         <div class="text-[11px] text-gray-400 tracking-wider">Soluções completas em câmbio turismo e comercial</div>
       </div>
-      <div class="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-gray-400 font-medium w-full md:w-auto"><button onclick="openInfoModal('termsModal')" class="hover:text-[#d6c07a] transition-colors hover:underline underline-offset-4"> Termos de Uso </button><button onclick="openInfoModal('privacyModal')" class="hover:text-[#d6c07a] transition-colors hover:underline underline-offset-4"> Privacidade </button><button onclick="openInfoModal('contactModal')" class="hover:text-[#d6c07a] transition-colors hover:underline underline-offset-4"> Fale Conosco </button></div>
+      <div class="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-gray-400 font-medium w-full md:w-auto"><button onclick="openInfoModal('termsModal')" class="hover:text-[#d6c07a] transition-colors hover:underline underline-offset-4"> Termos de Uso </button><button onclick="openInfoModal('privacyModal')" class="hover:text-[#d6c07a] transition-colors hover:underline underline-offset-4">Política de Privacidade </button><button onclick="openInfoModal('contactModal')" class="hover:text-[#d6c07a] transition-colors hover:underline underline-offset-4"> Fale Conosco </button></div>
       <div class="text-center md:text-right w-full md:w-auto space-y-1">
         <div class="text-[10px] text-gray-500 leading-tight"> &copy; 2025 M&A Consultoria Câmbio.<br class="sm:hidden"> Todos os direitos reservados </div>
-        <div class="text-[10px] text-gray-600 flex items-center justify-center md:justify-end gap-1"><i class="ph-bold ph-code"></i> Dev by <a href="https://bio.site/lucascode" target="_blank" class="text-gray-500 hover:text-[#d6c07a] transition-colors font-semibold border-b border-transparent hover:border-[#d6c07a]"> Lucas Code </a></div>
+        <div class="text-[10px] text-gray-600 flex items-center justify-center md:justify-end gap-1"><i class="ph-bold ph-code"></i> Dev by <a href="https://bio.site/lucascode" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-[#d6c07a] transition-colors font-semibold border-b border-transparent hover:border-[#d6c07a]"> Lucas Code </a></div>
       </div>
     </div>
   </footer>
@@ -200,7 +200,7 @@
           <div class="bg-[#2b2a2c] px-4 py-4 sm:px-6 flex justify-between items-center">
             <div class="flex items-center gap-2 text-[#d6c07a]"><i class="ph-bold ph-identification-card text-xl"></i>
               <h3 class="text-lg font-bold leading-6 id=" modal-title">Dados para Cadastro</h3>
-            </div><button id="closeModalBtn" class="text-gray-400 hover:text-white transition-colors"><i class="ph-bold ph-x text-2xl"></i></button>
+            </div><button type="button" id="closeModalBtn" class="text-gray-400 hover:text-white transition-colors" aria-label="Fechar"><i class="ph-bold ph-x text-2xl"></i></button>
           </div>
           <div class="px-4 py-5 sm:p-6 bg-gray-50">
             <div class="bg-white rounded-lg p-4 mb-4 border border-[#d6c07a]/30 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -263,7 +263,9 @@
                   </div>
                   <div class="text-[10px] font-bold text-[#d6c07a] uppercase tracking-wide border-t border-[#d6c07a]/20 pt-2 w-full mt-1"> Não é necessário anexar ou pagar nada agora. Basta seguir as instruções após a confirmação. </div>
                 </div>
-              </div><button type="submit" class="w-full mt-6 btn-primary text-gray-800 font-bold text-lg py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex justify-center items-center gap-2"> Confirmar Compra <i class="ph-bold ph-check-circle text-xl"></i></button>
+              </div>
+              <div class="bg-transparent p-5"><p class="text-xs text-gray-600 leading-relaxed"><i class="ph-bold ph-info"></i> Ao prosseguir com a confirmação da compra, você concorda com os nossos <strong><a href="https://maconsultoriacambio.com.br/politicas-privacidade" target="_blank" rel="noopener noreferrer" class="underline hover:text-[#d6c07a]">Termos de Política de Privacidade</a></strong></p></div>
+              <button type="submit" class="w-full mt-6 btn-primary text-gray-800 font-bold text-lg py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all flex justify-center items-center gap-2"> Confirmar Compra <i class="ph-bold ph-check-circle text-xl"></i></button>
             </form>
             <div id="successStep" class="hidden text-center py-8">
               <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 mb-5 animate-bounce"><i class="ph-fill ph-check-circle text-5xl text-green-600"></i></div>
@@ -317,6 +319,7 @@
               <p><strong>Finalidade:</strong> Seus dados são utilizados exclusivamente para cotações, operações de câmbio e cumprimento das exigências legais do Banco Central (Bacen).</p>
               <p><strong>Segurança:</strong> Não vendemos nem compartilhamos seus dados com terceiros para fins comerciais. As informações são compartilhadas somente com nosso Banco parceiro, conforme exigido para execução dos serviços de câmbio. Mantemos tudo em ambiente seguro e armazenamos apenas pelo tempo necessário.</p>
               <p><strong>Seus Direitos:</strong> Você pode solicitar o acesso, correção ou exclusão dos seus dados a qualquer momento entrando em contato conosco.</p>
+              <p><strong>Consulte nossa Política de Privacidade completa: <a href="https://maconsultoriacambio.com.br/politicas-privacidade" target="_blank" rel="noopener noreferrer" class="text-gold font-semibold hover:underline underline-offset-2">Clique aqui</a></strong></p>
             </div>
           </div>
           <div class="bg-gray-50 px-6 py-3 flex flex-row-reverse"><button type="button" class="w-full sm:w-auto inline-flex justify-center rounded-lg bg-[#2b2a2c] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black transition-all" onclick="closeInfoModal('privacyModal')">Fechar</button></div>
@@ -369,7 +372,8 @@
     </div>
   </div>
   <script type="text/javascript"> window.addEventListener('load', function () { if (typeof emailjs !== 'undefined') { emailjs.init("s6azsJB2904TaC8bi"); } else { console.warn("EmailJS falhou ao carregar."); } }); </script>
-  <script src="dist/script.min.js" defer></script>
+  <!-- <script src="dist/script.min.js" defer></script> Desenvolvimento -->
+  <script src="src/js/script.js" defer></script> <!-- Produção -->
 </body>
 
 </html>

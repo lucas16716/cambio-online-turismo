@@ -281,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // Processa Cartão (Colunas 9 e 10 - J e K)
-      for (let i = 1; i <= 7; i++) {
+      for (let i = 1; i <= 10; i++) {
         const r = rows[i];
         if (!r) continue;
         const m = r.c[9]?.v;
@@ -365,12 +365,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!data) return null;
 
-    const rateWithIOF = data.raw;
-    const baseRate = rateWithIOF / (1 + IOF_RATE);
-    const iofValue = baseRate * IOF_RATE;
-    const totalBRL = amount * rateWithIOF;
-    const totalIOFValue = amount * iofValue;
-    const conversionBase = amount * baseRate;
+    // 1. Descobre a Cotação Base travada em 4 casas a partir do valor cru da planilha
+    const baseRate = Number((data.raw / (1 + IOF_RATE)).toFixed(4));
+
+    // 2. Calcula o VET travado em 4 casas (Ele passa a ser o mestre absoluto da conta)
+    const rateWithIOF = Number((baseRate * (1 + IOF_RATE)).toFixed(4));
+
+    // 3. O TOTAL BRL passa a ser rigorosamente VET * Quantidade (garante a conta da calculadora do cliente)
+    const totalBRL = Number((amount * rateWithIOF).toFixed(2));
+
+    // 4. Engenharia reversa: deduz o Valor Líquido e o IOF exatos a partir do Total BRL para fechar a soma contábil
+    const conversionBase = Number((totalBRL / (1 + IOF_RATE)).toFixed(2));
+    const totalIOFValue = Number((totalBRL - conversionBase).toFixed(2));
 
     return {
       mode,
@@ -845,18 +851,27 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
     if (calcDetails) {
       const iofPct = (res.iofRate * 100).toFixed(2).replace(".", ",");
       calcDetails.innerHTML = `
-        <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">Valor Líquido <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor total convertido sem impostos</span></span></span><span class="font-mono">${formatBRL(
-          res.conversionBase,
-        )}</span></div>
-        <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">Cotação Turismo<span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor unitário da moeda sem impostos</span></span></span><span class="font-mono">R$ ${formatRate(
-          res.cotaçãoBase,
-        )}</span></div>
-        <div class="flex justify-between text-sm border-b pb-2 mb-2"><span class="text-gray-600 flex items-center gap-1">IOF (${iofPct}%) <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Imposto obrigatório sobre Operações Financeiras</span></span></span><span class="font-mono">${formatBRL(
-          res.totalIOFValue,
-        )}</span></div>
-        <div class="flex justify-between text-sm pt-1"><span class="text-gray-600 flex items-center gap-1">Taxa VET Unitária <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor Efetivo Total - Inclui câmbio, IOF e todas as taxas aplicáveis</span></span></span><span class="font-mono font-bold text-[#d6c07a]">R$ ${formatRate(
-          res.VET,
-        )}</span></div>`;
+        <div class="flex justify-between text-sm border-b pb-2 mb-2">
+          <span class="text-gray-600 flex items-center gap-1">Valor Líquido <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor total convertido sem impostos</span></span></span>
+          <span class="font-mono">${formatBRL(res.conversionBase)}</span>
+        </div>
+        <div class="flex justify-between text-sm border-b pb-2 mb-2">
+          <span class="text-gray-600 flex items-center gap-1">Cotação Turismo<span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Valor unitário da moeda sem impostos</span></span></span>
+          <span class="font-mono">R$ ${formatRate(res.cotaçãoBase)}</span>
+        </div>
+        <div class="flex justify-between text-sm border-b pb-2 mb-2">
+          <span class="text-gray-600 flex items-center gap-1">IOF (${iofPct}%) <span class="tooltip"><i class="ph-bold ph-info"></i><span class="tooltiptext">Imposto obrigatório sobre Operações Financeiras</span></span></span>
+          <span class="font-mono">${formatBRL(res.totalIOFValue)}</span>
+        </div>
+        <div class="flex justify-between text-sm pt-1">
+          <span class="text-gray-600 flex items-center gap-1">Taxa VET Unitária 
+            <span class="tooltip">
+              <i class="ph-bold ph-info cursor-pointer hover:text-[#d6c07a] transition-colors"></i>
+              <span class="tooltiptext font-normal normal-case tracking-normal text-left">Valor Efetivo Total. O VET é um índice médio exibido com 4 casas por norma do Bacen, o cálculo real é a soma do Valor Líquido + Impostos</span>
+            </span>
+          </span>
+          <span class="font-mono font-bold text-[#d6c07a]">R$ ${formatRate(res.VET)}</span>
+        </div>`;
     }
 
     updateComparison(from, amount);
@@ -1045,7 +1060,16 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
     }
 
     if (operationalInfo) {
-      operationalInfo.innerHTML = `<div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2 text-justify"><p class="font-bold text-gray-700 mb-1 flex items-center gap-1"><i class="ph-bold ph-info"></i> Informações Importantes:</p><p>1. O VET (Valor Efetivo Total) representa o custo final, incluindo câmbio, impostos (IOF) e tarifas.</p><p>2. A operação está sujeita a disponibilidade de estoque e validação de dados/documento de identificação (é obrigatório o envio de documento válido como RG, RNE ou CNH).</p><p>3. Valores/taxas sujeitos a alteração até o fechamento efetivo da operação com um de nossos operadores.</p><p>4. Câmbio Delivery: Grátis para operações acima de USD 500,00 (ou equivalente em outra moeda). Para valores menores, taxa de R$ 30,00 (consulte a cobertura do seu CEP e a disponibilidade diretamente com um especialista).</p></div>`;
+      operationalInfo.innerHTML = `
+        <div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2 text-justify">
+          <p class="font-bold text-gray-700 mb-1 flex items-center gap-1">
+            <i class="ph-bold ph-info"></i> Informações Importantes:
+          </p>
+          <p>1. O Valor Efetivo Total (VET) representa o custo final de cada moeda, já incluindo o câmbio e o IOF. Por norma do Banco Central, ele é obrigatoriamente exibido com 4 casas decimais. Para garantir a exatidão financeira da sua compra, o total a pagar é calculado pela soma exata do Valor Líquido com os Impostos.</p>
+          <p>2. A operação está sujeita a disponibilidade de estoque e validação de dados/documento de identificação (é obrigatório o envio de documento válido como RG, RNE ou CNH).</p>
+          <p>3. Valores/taxas sujeitos a alteração até o fechamento efetivo da operação com um de nossos operadores.</p>
+          <p>4. Câmbio Delivery: Grátis para operações acima de USD 500,00 (ou equivalente em outra moeda). Para valores menores, taxa de R$ 30,00 (consulte a cobertura do seu CEP e a disponibilidade diretamente com um especialista).</p>
+        </div>`;
     }
 
     budgetForm.classList.remove("hidden");
@@ -1156,36 +1180,40 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
 
   function setupFinalWhats(name) {
     if (!finalWhatsAppBtn || !currentQuote) return;
+
     finalWhatsAppBtn.onclick = () => {
-      /*const randomIndex = Math.random() < 0.5 ? 0 : 1;*/
       const phoneDigits = getEl("clientPhone").value.replace(/\D/g, "");
-      let randomIndex = 0;
-      if (phoneDigits.length > 0) {
-        const lastDigit = parseInt(phoneDigits.charAt(phoneDigits.length - 1), 10);
-        randomIndex = lastDigit % 2;
-      } else {
-        randomIndex = Date.now() % 2;
-      }
-      const selectedOperator = OPERATORS[randomIndex];
+      let randomIndex =
+        phoneDigits.length > 0
+          ? parseInt(phoneDigits.charAt(phoneDigits.length - 1), 10) % 2
+          : Date.now() % 2;
+
       const modeText =
         currentQuote.mode === "papel" ? "Papel Moeda 💵" : "Cartão 💳";
-      const iofPercentage = (currentQuote.iofRate * 100)
-        .toFixed(2)
-        .replace(".", ",");
-      const client_cpf = getEl("clientCPF").value; // Correção para pegar o CPF correto
+      const client_cpf = getEl("clientCPF").value;
 
-      const msg = `Olá, M&A Consultoria Câmbio! Meu nome é *${name} (CPF ${client_cpf})*.\nAcabei de enviar meus dados pelo Site Conversor.\n\nGostaria de prosseguir com a operação:\n*MODALIDADE: ${modeText}*\n*VALOR: ${
-        currentQuote.amount
-      } ${currentQuote.currencyCode}*\n- Cotação Turismo: R$ ${formatRate(
-        currentQuote.cotaçãoBase,
-      )}\n- IOF: ${iofPercentage}%\n\n*👉🏻 TOTAL A PAGAR: ${formatBRL(
-        currentQuote.totalBRL,
-      )}*\n\n*📎 Estou enviando a foto do meu documento (CNH, RG ou RNE) por aqui para finalizar meu cadastro.*`;
+      // Formata os valores
+      const totalBRL = formatBRL(currentQuote.totalBRL);
+      const vetRate = formatRate(currentQuote.VET); // O VET final que o banco precisa
+      const cotacaoTurismo = formatRate(currentQuote.cotaçãoBase);
+
+      const msg = `Olá, M&A Consultoria Câmbio! 😊
+
+Meu nome é *${name}* (CPF *${client_cpf}*).
+
+Acabei de enviar meus dados pelo *Site Conversor* e gostaria de prosseguir com a seguinte operação:
+
+• *Modalidade:* ${modeText}
+• *Moeda:* ${currentQuote.amount} ${currentQuote.currencyCode}
+• *Cotação Turismo:* R$ ${cotacaoTurismo}
+• *VET Final (com IOF):* R$ ${vetRate}
+
+👉 *TOTAL A PAGAR: ${totalBRL}*
+
+📎 Estou enviando em anexo a foto do meu documento (CNH, RG ou RNE) para concluir meu cadastro.`;
 
       window.open(
-        `https://api.whatsapp.com/send?phone=${selectedOperator}&text=${encodeURIComponent(
-          msg,
-        )}`,
+        `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${encodeURIComponent(msg)}`,
         "_blank",
       );
       setTimeout(() => window.location.reload(), 1000);
