@@ -429,33 +429,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!data) return null;
 
-    // 1. O VET é o "Número Oficial" que você lê da planilha (já formatado com 4 casas)
-    const VET = data.raw;
+    const IOF_RATE = 0.035;
 
-    // 2. Cotação Base: Calculada a partir do VET, arredondada para 4 casas para manter consistência
+    // 1. O VET Oficial que já vem formatado da planilha
+    const VET = Number(data.raw);
+
+    // 2. Descobre a Cotação Base exata em 4 casas (Corta a dízima)
     const baseRate = Number((VET / (1 + IOF_RATE)).toFixed(4));
 
-    // 3. Valor Líquido: O montante real da moeda base vezes a quantidade, travado em 2 casas (centavos)
-    const conversionBase = Number((amount * baseRate).toFixed(2));
+    // ==========================================
+    // 3. A REGRA DO SEU AVISO: LÍQUIDO + IMPOSTOS
+    // ==========================================
+    // Usamos a Matemática Inteira para garantir a exatidão dos centavos
 
-    // 4. Total BRL: O montante final (VET * Quantidade), travado em 2 casas (centavos)
-    const totalBRL = Number((amount * VET).toFixed(2));
+    const conversionBase_cents = Math.round(amount * baseRate * 100);
 
-    // 5. IOF: A diferença exata entre o que o cliente paga e o valor líquido, garantindo que a soma feche
-    const totalIOFValue = Number((totalBRL - conversionBase).toFixed(2));
+    const totalIOF_cents = Math.round(conversionBase_cents * IOF_RATE);
+
+    const totalBRL_cents = conversionBase_cents + totalIOF_cents;
 
     return {
       mode,
       currencyCode,
       amount,
       cotaçãoBase: baseRate,
-      conversionBase,
+      conversionBase: conversionBase_cents / 100,
       iofRate: IOF_RATE,
-      totalIOFValue,
-      totalBRL,
+      totalIOFValue: totalIOF_cents / 100,
+      totalBRL: totalBRL_cents / 100,
       VET: VET,
       rateDisplay: data.display,
-      time: lastFetchTime || new Date(),
+      time: typeof lastFetchTime !== "undefined" ? lastFetchTime : new Date(),
     };
   }
 
