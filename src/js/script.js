@@ -10,6 +10,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const TEMPLATE_CLIENTE = "template_u5saecn";
   const OPERATORS = ["5511953505626", "5511938059556"];
 
+  // Tabela de isenção de frete (Valores mínimos para frete grátis)
+  const DELIVERY_FREE_THRESHOLDS = {
+    USD: 500,
+    EUR: 500,
+    JPY: 70000,
+    CLP: 400000,
+    MXN: 8500,
+    UYU: 17000,
+    NZD: 900,
+    AED: 1600,
+    CNY: 2900,
+    PEN: 1400,
+    ARS: 600000,
+    COP: 1300000,
+    ZAR: 70000,
+  };
+
   // --- ATUALIZADO COM REGRAS DE NOTAS PARA EXÓTICAS ---
   const PAPER_RULES = {
     USD: { minStep: 50, notes: "100 (50 apenas sob consulta)" },
@@ -92,18 +109,38 @@ document.addEventListener("DOMContentLoaded", () => {
   // Salva o HTML original do botão para restaurar depois
   const originalBuyBtnHTML = buyBtn ? buyBtn.outerHTML : null;
 
-  // Lógica do Checkbox de Delivery
+  // // Lógica do Checkbox de Delivery
+  // if (deliveryCheck) {
+  //   deliveryCheck.addEventListener("change", function () {
+  //     if (this.checked) {
+  //       deliveryFields.classList.remove("hidden");
+  //       getEl("deliveryCEP").required = !0;
+  //       getEl("deliveryAddress").required = !0;
+  //     } else {
+  //       deliveryFields.classList.add("hidden");
+  //       getEl("deliveryCEP").required = !1;
+  //       getEl("deliveryAddress").required = !1;
+  //     }
+  //   });
+  // }
+
+  // OUVINTE DO CLIQUE NA CAIXINHA DE DELIVERY
   if (deliveryCheck) {
     deliveryCheck.addEventListener("change", function () {
       if (this.checked) {
+        // Se marcou a caixinha, mostra os campos de endereço
         deliveryFields.classList.remove("hidden");
-        getEl("deliveryCEP").required = !0;
-        getEl("deliveryAddress").required = !0;
+        document.getElementById("deliveryCEP").required = true;
+        document.getElementById("deliveryAddress").required = true;
       } else {
+        // Se desmarcou, esconde os campos de endereço
         deliveryFields.classList.add("hidden");
-        getEl("deliveryCEP").required = !1;
-        getEl("deliveryAddress").required = !1;
+        document.getElementById("deliveryCEP").required = false;
+        document.getElementById("deliveryAddress").required = false;
       }
+
+      // AQUI É A MÁGICA: Recalcula tudo toda vez que o cliente clica!
+      updateModalFinance();
     });
   }
 
@@ -437,9 +474,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // 2. Descobre a Cotação Base exata em 4 casas (Corta a dízima)
     const baseRate = Number((VET / (1 + IOF_RATE)).toFixed(4));
 
-    // ==========================================
+    // ===========================================
     // 3. A REGRA DO SEU AVISO: LÍQUIDO + IMPOSTOS
-    // ==========================================
+    // ===========================================
     // Usamos a Matemática Inteira para garantir a exatidão dos centavos
 
     const conversionBase_cents = Math.round(amount * baseRate * 100);
@@ -1091,58 +1128,124 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
     }
   }
 
-  function openModal() {
-    if (!currentQuote) return showError("Faça uma cotação antes.");
+  function updateModalFinance() {
+    if (!currentQuote) return;
 
-    modalCurrencyAmount.textContent = currentQuote.amount.toLocaleString(
-      "pt-BR",
-      { minimumFractionDigits: 2 },
-    );
-    modalCurrencyCode.textContent = currentQuote.currencyCode;
-    modalTotalBRL.textContent = formatBRL(currentQuote.totalBRL);
+    // 1. Verifica se o usuário marcou a opção de delivery
+    const isDelivery = deliveryCheck && deliveryCheck.checked;
+    let deliveryFee = 0;
 
+    // 2. Aplica a regra da tabela
+    if (isDelivery) {
+      const threshold = DELIVERY_FREE_THRESHOLDS[currentQuote.currencyCode];
+
+      // Se a moeda está na tabela e o valor pedido atingiu a meta, frete grátis. Senão, 30 reais.
+      if (threshold && currentQuote.amount >= threshold) {
+        deliveryFee = 0;
+      } else {
+        deliveryFee = 30;
+      }
+    }
+
+    // 3. Salva os dados atualizados no objeto para usarmos no WhatsApp
+    currentQuote.deliveryFee = deliveryFee;
+    currentQuote.finalTotalBRL = currentQuote.totalBRL + deliveryFee;
+
+    // 4. Atualiza o Valor Total GIGANTE no Modal
+    if (modalTotalBRL) {
+      modalTotalBRL.textContent = formatBRL(currentQuote.finalTotalBRL);
+    }
+
+    // 5. Constrói a linha visual do Frete (só aparece se a caixinha estiver marcada)
+    let deliveryHtml = "";
+    if (isDelivery) {
+      const isFree = deliveryFee === 0;
+      deliveryHtml = `
+        <div class="flex justify-between text-gray-500">
+          <span>Frete Delivery:</span>
+          <span class="font-mono ${isFree ? "text-green-600 font-bold" : ""}">${isFree ? "R$ 0,00 (Grátis)" : "R$ 30,00"}</span>
+        </div>`;
+    }
+
+    // 6. Atualiza o quadro de taxas interno (mantendo a sanfona no estado que estava)
     if (modalDetails) {
       const iofPct = (currentQuote.iofRate * 100).toFixed(2).replace(".", ",");
+      const isHidden =
+        document
+          .getElementById("ratesContainer")
+          ?.classList.contains("hidden") ?? true;
+
       modalDetails.innerHTML = `
-        <button type="button" id="toggleRatesBtn" class="text-[10px] uppercase font-bold text-gray-400 hover:text-[#d6c07a] flex items-center justify-end gap-1 w-full transition-colors focus:outline-none">Ver taxas <i id="toggleIcon" class="ph-bold ph-caret-down"></i></button>
-        <div id="ratesContainer" class="hidden mt-2 pt-2 border-t border-[#d6c07a]/10 text-xs space-y-1">
+        <button type="button" id="toggleRatesBtn" class="text-[10px] uppercase font-bold text-gray-400 hover:text-[#d6c07a] flex items-center justify-end gap-1 w-full transition-colors focus:outline-none">
+          ${isHidden ? 'Ver taxas <i class="ph-bold ph-caret-down"></i>' : 'Ocultar taxas <i class="ph-bold ph-caret-up"></i>'}
+        </button>
+        <div id="ratesContainer" class="${isHidden ? "hidden" : ""} mt-2 pt-2 border-t border-[#d6c07a]/10 text-xs space-y-1">
           <div class="flex justify-between text-gray-500"><span>Valor Líquido:</span><span class="font-mono">${formatBRL(currentQuote.conversionBase)}</span></div>
-          <div class="flex justify-between text-gray-500"><span>IOF (${iofPct}%):</span><span class="font-mono">${formatBRL(
-            currentQuote.totalIOFValue,
-          )}</span></div>
-          <div class="flex justify-between text-gray-800 font-semibold mt-1 pt-1 border-t border-dashed border-gray-200"><span>VET Final:</span><span class="font-mono text-[#d6c07a]">R$ ${formatRate(
-            currentQuote.VET,
-          )}</span></div>
+          <div class="flex justify-between text-gray-500"><span>IOF (${iofPct}%):</span><span class="font-mono">${formatBRL(currentQuote.totalIOFValue)}</span></div>
+          ${deliveryHtml}
+          <div class="flex justify-between text-gray-800 font-semibold mt-1 pt-1 border-t border-dashed border-gray-200">
+            <span class="flex items-center gap-1">VET Final:</span>
+            <span class="font-mono text-[#d6c07a]">R$ ${formatRate(currentQuote.VET)}</span>
+          </div>
         </div>`;
 
+      // Religa o botão do clique nas taxas
       const btn = document.getElementById("toggleRatesBtn");
       const container = document.getElementById("ratesContainer");
       if (btn && container) {
         btn.onclick = () => {
           container.classList.toggle("hidden");
           btn.innerHTML = container.classList.contains("hidden")
-            ? `Ver taxas <i class="ph-bold ph-caret-down"></i>`
-            : `Ocultar taxas <i class="ph-bold ph-caret-up"></i>`;
+            ? 'Ver taxas <i class="ph-bold ph-caret-down"></i>'
+            : 'Ocultar taxas <i class="ph-bold ph-caret-up"></i>';
         };
       }
     }
+  }
 
-    if (operationalInfo) {
-      operationalInfo.innerHTML = `
-        <div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2 text-justify">
-          <p class="font-bold text-gray-700 mb-1 flex items-center gap-1">
-            <i class="ph-bold ph-info"></i> Informações Importantes:
-          </p>
-          <p>1. O Valor Efetivo Total (VET) representa o custo final de cada moeda, já incluindo o câmbio e o IOF. Por norma do Banco Central, ele é obrigatoriamente exibido com 4 casas decimais. Para garantir a exatidão financeira da sua compra, o total a pagar é calculado pela soma exata do Valor Líquido com os Impostos.</p>
-          <p>2. A operação está sujeita a disponibilidade de estoque e validação de dados/documento de identificação (é obrigatório o envio de documento válido como RG, RNE ou CNH).</p>
-          <p>3. Valores/taxas sujeitos a alteração até o fechamento efetivo da operação com um de nossos operadores.</p>
-          <p>4. Câmbio Delivery: Grátis para operações acima de USD 500,00 (ou equivalente em outra moeda). Para valores menores, taxa de R$ 30,00 (consulte a cobertura do seu CEP e a disponibilidade diretamente com um especialista).</p>
-        </div>`;
+  function openModal() {
+    if (!currentQuote) return showError("Faça uma cotação antes.");
+
+    // 1. Preenche a quantidade e a moeda lá no topo do modal
+    modalCurrencyAmount.textContent = currentQuote.amount.toLocaleString(
+      "pt-BR",
+      { minimumFractionDigits: 2 },
+    );
+    modalCurrencyCode.textContent = currentQuote.currencyCode;
+
+    // 2. Zera o estado do delivery para não puxar lixo da cotação anterior
+    if (typeof deliveryCheck !== "undefined" && deliveryCheck) {
+      deliveryCheck.checked = false;
+
+      if (typeof deliveryFields !== "undefined" && deliveryFields) {
+        deliveryFields.classList.add("hidden");
+      }
+
+      const cepInput = document.getElementById("deliveryCEP");
+      const addressInput = document.getElementById("deliveryAddress");
+
+      if (cepInput) cepInput.required = false;
+      if (addressInput) addressInput.required = false;
     }
 
-    budgetForm.classList.remove("hidden");
-    successStep.classList.add("hidden");
-    budgetModal.classList.remove("hidden");
+    // 3. A MÁGICA ACONTECE AQUI: Calcula o frete, escreve o Total na tela e monta o sanfona de taxas
+    updateModalFinance();
+
+    // 4. Mantém a sua caixa de Informações Importantes intacta!
+    if (operationalInfo) {
+      operationalInfo.innerHTML = `<div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2 text-justify">
+      <p class="font-bold text-gray-700 mb-1 flex items-center gap-1"><i class="ph-bold ph-info"></i> Informações Importantes:</p>
+      <p>1. O Valor Efetivo Total (VET) é um índice médio exibido com 4 casas por norma do Bacen e representa o custo final, incluindo câmbio, impostos (IOF) e tarifas. O cálculo real da operação é a soma do Valor Líquido + Impostos.</p>
+      <p>2. A operação está sujeita a disponibilidade de estoque e validação de dados/documento de identificação (é obrigatório o envio de documento válido como RG, RNE ou CNH).</p>
+      <p>3. Valores/taxas sujeitos a alteração até o fechamento efetivo da operação com um de nossos operadores.</p>
+      <p>4. Câmbio Delivery: Grátis para operações acima de USD 500,00 (ou equivalente em outra moeda). Para valores menores, taxa de R$ 30,00 (consulte a cobertura do seu CEP e a disponibilidade diretamente com um especialista).</p>
+    </div>`;
+    }
+
+    // 5. Exibe as telas corretas do modal
+    if (budgetForm) budgetForm.classList.remove("hidden");
+    if (successStep) successStep.classList.add("hidden");
+    if (budgetModal) budgetModal.classList.remove("hidden");
   }
 
   function closeModal() {
