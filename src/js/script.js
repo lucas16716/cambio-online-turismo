@@ -257,12 +257,28 @@ document.addEventListener("DOMContentLoaded", () => {
       for (let i = 1; i <= 18; i++) {
         const r = rows[i];
         if (!r) continue;
+        // const m = r.c[7]?.v; // Moeda
+        // const v = r.c[8]?.v; // Valor
+        // if (m && v) {
+        //   ratesPapel[String(m).trim()] = {
+        //     raw: Number(v),
+        //     display: r.c[8].f || String(v),
+        //   };
+        // }
         const m = r.c[7]?.v; // Moeda
-        const v = r.c[8]?.v; // Valor
-        if (m && v) {
+        const valRaw = r.c[8]?.v; // Valor cru (ignorar)
+        const valFormatted = r.c[8]?.f; // Valor formatado (o que a gente quer!)
+
+        if (m) {
+          // Converte o valor formatado (ex: "5,3147") para Number (5.3147)
+          // Precisamos trocar a vírgula por ponto para o JS entender
+          const sanitizedValue = valFormatted
+            ? Number(valFormatted.replace(",", "."))
+            : Number(valRaw);
+
           ratesPapel[String(m).trim()] = {
-            raw: Number(v),
-            display: r.c[8].f || String(v),
+            raw: sanitizedValue, // Agora usamos o valor "travado" visualmente
+            display: valFormatted || String(valRaw),
           };
         }
       }
@@ -284,12 +300,26 @@ document.addEventListener("DOMContentLoaded", () => {
       for (let i = 1; i <= 10; i++) {
         const r = rows[i];
         if (!r) continue;
-        const m = r.c[9]?.v;
-        const v = r.c[10]?.v;
-        if (m && v) {
-          ratesCartao[String(m).trim()] = {
-            raw: Number(v),
-            display: r.c[10].f || String(v),
+        // const m = r.c[9]?.v;
+        // const v = r.c[10]?.v;
+        // if (m && v) {
+        //   ratesCartao[String(m).trim()] = {
+        //     raw: Number(v),
+        //     display: r.c[10].f || String(v),
+        //   };
+        // }
+        const mCartao = r.c[9]?.v;
+        const valRawCartao = r.c[10]?.v;
+        const valFormattedCartao = r.c[10]?.f;
+
+        if (mCartao) {
+          const sanitizedValue = valFormattedCartao
+            ? Number(valFormattedCartao.replace(",", "."))
+            : Number(valRawCartao);
+
+          ratesCartao[String(mCartao).trim()] = {
+            raw: sanitizedValue,
+            display: valFormattedCartao || String(valRawCartao),
           };
         }
       }
@@ -359,23 +389,59 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // function calculateConversion(mode, currencyCode, amount) {
+  //   const ratesObj = mode === "papel" ? ratesPapel : ratesCartao;
+  //   const data = ratesObj[currencyCode];
+
+  //   if (!data) return null;
+
+  //   // 1. Descobre a Cotação Base travada em 4 casas a partir do valor cru da planilha
+  //   const baseRate = Number((data.raw / (1 + IOF_RATE)).toFixed(4));
+
+  //   // 2. Calcula o VET travado em 4 casas (Ele passa a ser o mestre absoluto da conta)
+  //   const rateWithIOF = Number((baseRate * (1 + IOF_RATE)).toFixed(4));
+
+  //   // 3. O TOTAL BRL passa a ser rigorosamente VET * Quantidade (garante a conta da calculadora do cliente)
+  //   const totalBRL = Number((amount * rateWithIOF).toFixed(2));
+
+  //   // 4. Engenharia reversa: deduz o Valor Líquido e o IOF exatos a partir do Total BRL para fechar a soma contábil
+  //   const conversionBase = Number((totalBRL / (1 + IOF_RATE)).toFixed(2));
+  //   const totalIOFValue = Number((totalBRL - conversionBase).toFixed(2));
+
+  //   return {
+  //     mode,
+  //     currencyCode,
+  //     amount,
+  //     cotaçãoBase: baseRate,
+  //     conversionBase,
+  //     iofRate: IOF_RATE,
+  //     totalIOFValue,
+  //     totalBRL,
+  //     VET: rateWithIOF,
+  //     rateDisplay: data.display,
+  //     time: lastFetchTime || new Date(),
+  //   };
+  // }
+
   function calculateConversion(mode, currencyCode, amount) {
     const ratesObj = mode === "papel" ? ratesPapel : ratesCartao;
     const data = ratesObj[currencyCode];
 
     if (!data) return null;
 
-    // 1. Descobre a Cotação Base travada em 4 casas a partir do valor cru da planilha
-    const baseRate = Number((data.raw / (1 + IOF_RATE)).toFixed(4));
+    // 1. O VET é o "Número Oficial" que você lê da planilha (já formatado com 4 casas)
+    const VET = data.raw;
 
-    // 2. Calcula o VET travado em 4 casas (Ele passa a ser o mestre absoluto da conta)
-    const rateWithIOF = Number((baseRate * (1 + IOF_RATE)).toFixed(4));
+    // 2. Cotação Base: Calculada a partir do VET, arredondada para 4 casas para manter consistência
+    const baseRate = Number((VET / (1 + IOF_RATE)).toFixed(4));
 
-    // 3. O TOTAL BRL passa a ser rigorosamente VET * Quantidade (garante a conta da calculadora do cliente)
-    const totalBRL = Number((amount * rateWithIOF).toFixed(2));
+    // 3. Valor Líquido: O montante real da moeda base vezes a quantidade, travado em 2 casas (centavos)
+    const conversionBase = Number((amount * baseRate).toFixed(2));
 
-    // 4. Engenharia reversa: deduz o Valor Líquido e o IOF exatos a partir do Total BRL para fechar a soma contábil
-    const conversionBase = Number((totalBRL / (1 + IOF_RATE)).toFixed(2));
+    // 4. Total BRL: O montante final (VET * Quantidade), travado em 2 casas (centavos)
+    const totalBRL = Number((amount * VET).toFixed(2));
+
+    // 5. IOF: A diferença exata entre o que o cliente paga e o valor líquido, garantindo que a soma feche
     const totalIOFValue = Number((totalBRL - conversionBase).toFixed(2));
 
     return {
@@ -387,7 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
       iofRate: IOF_RATE,
       totalIOFValue,
       totalBRL,
-      VET: rateWithIOF,
+      VET: VET,
       rateDisplay: data.display,
       time: lastFetchTime || new Date(),
     };
@@ -743,7 +809,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const selectedOperator = OPERATORS[randomIndex];
 
         // --- MENSAGEM DETALHADA AQUI ---
-        const msg = `Olá, M&A Consultoria! Realizei uma simulação de moeda exótica no site:
+        const msg = `Olá, M&A Consultoria Câmbio! Realizei uma simulação de moeda exótica no site:
           
 *MOEDA:* ${currencyCode} (${currencyName})
 *QUANTIDADE:* ${amount}
@@ -753,7 +819,7 @@ document.addEventListener("DOMContentLoaded", () => {
 💸 IOF: ${formattedIOF}
 📊 VET Final: R$ ${formattedVET}
 
-*💰 TOTAL ESTIMADO: ${formattedTotal}*
+*💰 TOTAL A PAGAR: ${formattedTotal}*
 
 Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.`;
 
@@ -867,7 +933,7 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
           <span class="text-gray-600 flex items-center gap-1">Taxa VET Unitária 
             <span class="tooltip">
               <i class="ph-bold ph-info cursor-pointer hover:text-[#d6c07a] transition-colors"></i>
-              <span class="tooltiptext font-normal normal-case tracking-normal text-left">Valor Efetivo Total. O VET é um índice médio exibido com 4 casas por norma do Bacen, o cálculo real é a soma do Valor Líquido + Impostos</span>
+              <span class="tooltiptext font-normal normal-case tracking-normal text-left">O Valor Efetivo Total (VET) é um índice médio exibido com 4 casas por norma do Bacen, o total a pagar é calculado pela soma exata do Valor Líquido com os Impostos.</span>
             </span>
           </span>
           <span class="font-mono font-bold text-[#d6c07a]">R$ ${formatRate(res.VET)}</span>
@@ -1036,9 +1102,7 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
       modalDetails.innerHTML = `
         <button type="button" id="toggleRatesBtn" class="text-[10px] uppercase font-bold text-gray-400 hover:text-[#d6c07a] flex items-center justify-end gap-1 w-full transition-colors focus:outline-none">Ver taxas <i id="toggleIcon" class="ph-bold ph-caret-down"></i></button>
         <div id="ratesContainer" class="hidden mt-2 pt-2 border-t border-[#d6c07a]/10 text-xs space-y-1">
-          <div class="flex justify-between text-gray-500"><span>Cotação Base:</span><span class="font-mono">R$ ${formatRate(
-            currentQuote.cotaçãoBase,
-          )}</span></div>
+          <div class="flex justify-between text-gray-500"><span>Valor Líquido:</span><span class="font-mono">${formatBRL(currentQuote.conversionBase)}</span></div>
           <div class="flex justify-between text-gray-500"><span>IOF (${iofPct}%):</span><span class="font-mono">${formatBRL(
             currentQuote.totalIOFValue,
           )}</span></div>
