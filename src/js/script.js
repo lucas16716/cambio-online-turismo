@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const DELIVERY_FREE_THRESHOLDS = {
     USD: 500,
     EUR: 500,
+    GBP: 500,
     JPY: 70000,
     CLP: 400000,
     MXN: 8500,
@@ -432,31 +433,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   //   if (!data) return null;
 
-  //   // 1. Descobre a Cotação Base travada em 4 casas a partir do valor cru da planilha
-  //   const baseRate = Number((data.raw / (1 + IOF_RATE)).toFixed(4));
+  //   const IOF_RATE = 0.035;
 
-  //   // 2. Calcula o VET travado em 4 casas (Ele passa a ser o mestre absoluto da conta)
-  //   const rateWithIOF = Number((baseRate * (1 + IOF_RATE)).toFixed(4));
+  //   // 1. O VET Oficial que já vem formatado da planilha
+  //   const VET = Number(data.raw);
 
-  //   // 3. O TOTAL BRL passa a ser rigorosamente VET * Quantidade (garante a conta da calculadora do cliente)
-  //   const totalBRL = Number((amount * rateWithIOF).toFixed(2));
+  //   // 2. Descobre a Cotação Base exata em 4 casas (Corta a dízima)
+  //   const baseRate = Number((VET / (1 + IOF_RATE)).toFixed(4));
 
-  //   // 4. Engenharia reversa: deduz o Valor Líquido e o IOF exatos a partir do Total BRL para fechar a soma contábil
-  //   const conversionBase = Number((totalBRL / (1 + IOF_RATE)).toFixed(2));
-  //   const totalIOFValue = Number((totalBRL - conversionBase).toFixed(2));
+  //   // ===========================================
+  //   // 3. A REGRA DO SEU AVISO: LÍQUIDO + IMPOSTOS
+  //   // ===========================================
+  //   // Usamos a Matemática Inteira para garantir a exatidão dos centavos
+
+  //   const conversionBase_cents = Math.round(amount * baseRate * 100);
+
+  //   const totalIOF_cents = Math.round(conversionBase_cents * IOF_RATE);
+
+  //   const totalBRL_cents = conversionBase_cents + totalIOF_cents;
 
   //   return {
   //     mode,
   //     currencyCode,
   //     amount,
   //     cotaçãoBase: baseRate,
-  //     conversionBase,
+  //     conversionBase: conversionBase_cents / 100,
   //     iofRate: IOF_RATE,
-  //     totalIOFValue,
-  //     totalBRL,
-  //     VET: rateWithIOF,
+  //     totalIOFValue: totalIOF_cents / 100,
+  //     totalBRL: totalBRL_cents / 100,
+  //     VET: VET,
   //     rateDisplay: data.display,
-  //     time: lastFetchTime || new Date(),
+  //     time: typeof lastFetchTime !== "undefined" ? lastFetchTime : new Date(),
   //   };
   // }
 
@@ -468,22 +475,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const IOF_RATE = 0.035;
 
-    // 1. O VET Oficial que já vem formatado da planilha
+    // 1. O VET Oficial da planilha
     const VET = Number(data.raw);
 
-    // 2. Descobre a Cotação Base exata em 4 casas (Corta a dízima)
+    // ==========================================
+    // 2. A REGRA DE OURO DO BANCO CENTRAL
+    // ==========================================
+    // O Total a Pagar é intocável: VET * Quantidade (calculado em centavos inteiros)
+    const totalBRL_cents = Math.round(amount * VET * 100);
+
+    // 3. Descobre a Cotação Base (Turismo) em 4 casas
     const baseRate = Number((VET / (1 + IOF_RATE)).toFixed(4));
 
-    // ===========================================
-    // 3. A REGRA DO SEU AVISO: LÍQUIDO + IMPOSTOS
-    // ===========================================
-    // Usamos a Matemática Inteira para garantir a exatidão dos centavos
-
+    // 4. Calcula o Valor Líquido (Quantidade * Turismo)
     const conversionBase_cents = Math.round(amount * baseRate * 100);
 
-    const totalIOF_cents = Math.round(conversionBase_cents * IOF_RATE);
-
-    const totalBRL_cents = conversionBase_cents + totalIOF_cents;
+    // 5. O IOF absorve a diferença de centavos para a soma fechar perfeitamente!
+    const totalIOF_cents = totalBRL_cents - conversionBase_cents;
 
     return {
       mode,
@@ -1279,8 +1287,14 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
       btn.disabled = !0;
 
       try {
-        const isDelivery =
-          deliveryCheck && deliveryCheck.checked ? "SIM" : "NÃO";
+        const isDeliveryChecked = deliveryCheck && deliveryCheck.checked;
+        let deliveryFeeText = "Não (Retirada na Loja)";
+        if (isDeliveryChecked) {
+          deliveryFeeText =
+            currentQuote.deliveryFee === 0
+              ? "Sim (Frete Grátis)"
+              : "Sim (Frete R$ 30,00)";
+        }
 
         let templateParams = {
           currency_amount: currentQuote.amount.toLocaleString("pt-BR", {
@@ -1293,7 +1307,9 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
           exchange_rate: formatRate(currentQuote.cotaçãoBase),
           iof_value: formatBRL(currentQuote.totalIOFValue),
           vet_rate: formatRate(currentQuote.VET),
-          total_brl: formatBRL(currentQuote.totalBRL),
+          total_brl: formatBRL(
+            currentQuote.finalTotalBRL || currentQuote.totalBRL,
+          ),
           operation_type:
             currentQuote.mode === "papel" ? "Papel Moeda" : "Cartão Pré-pago",
           client_name: name,
@@ -1307,10 +1323,12 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
           client_job: getEl("clientJob").value,
           client_cep: getEl("clientCEP").value,
           client_address: getEl("clientAddress").value,
-          delivery_needed: isDelivery,
-          delivery_address:
-            isDelivery === "SIM" ? getEl("deliveryAddress").value : "—",
-          delivery_cep: isDelivery === "SIM" ? getEl("deliveryCEP").value : "—",
+          delivery_needed: deliveryFeeText,
+          delivery_address: isDeliveryChecked
+            ? getEl("deliveryAddress").value
+            : "—",
+          delivery_cep: isDeliveryChecked ? getEl("deliveryCEP").value : "—",
+
           file_preview: "",
           obs_documento:
             "Cliente instruído a enviar documentação via WhatsApp ou E-mail.",
@@ -1363,25 +1381,21 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
         currentQuote.mode === "papel" ? "Papel Moeda 💵" : "Cartão 💳";
       const client_cpf = getEl("clientCPF").value;
 
-      // Formata os valores
-      const totalBRL = formatBRL(currentQuote.totalBRL);
-      const vetRate = formatRate(currentQuote.VET); // O VET final que o banco precisa
+      // 1. Puxa os dados formatados (garantindo que pega o Total com Frete)
+      const finalTotal = currentQuote.finalTotalBRL || currentQuote.totalBRL;
+      const totalBRL = formatBRL(finalTotal);
+      const vetRate = formatRate(currentQuote.VET);
       const cotacaoTurismo = formatRate(currentQuote.cotaçãoBase);
 
-      const msg = `Olá, M&A Consultoria Câmbio! 😊
+      // 2. Prepara a linha do Frete para a mensagem
+      const isDeliveryChecked = deliveryCheck && deliveryCheck.checked;
+      let deliveryText = "";
+      if (isDeliveryChecked && currentQuote.deliveryFee > 0) {
+        deliveryText = `\n• *Frete Delivery:* R$ 30,00`;
+      }
 
-Meu nome é *${name}* (CPF *${client_cpf}*).
-
-Acabei de enviar meus dados pelo *Site Conversor* e gostaria de prosseguir com a seguinte operação:
-
-• *Modalidade:* ${modeText}
-• *Moeda:* ${currentQuote.amount} ${currentQuote.currencyCode}
-• *Cotação Turismo:* R$ ${cotacaoTurismo}
-• *VET Final (com IOF):* R$ ${vetRate}
-
-👉 *TOTAL A PAGAR: ${totalBRL}*
-
-📎 Estou enviando em anexo a foto do meu documento (CNH, RG ou RNE) para concluir meu cadastro.`;
+      // 3. Monta a mensagem final
+      const msg = `Olá, M&A Consultoria Câmbio! 😊\n\nMeu nome é *${name}* (CPF *${client_cpf}*).\n\nAcabei de enviar meus dados pelo *Site Conversor* e gostaria de prosseguir com a seguinte operação:\n\n• *Modalidade:* ${modeText}\n• *Moeda:* ${currentQuote.amount} ${currentQuote.currencyCode}\n• *VET Final (com IOF):* R$ ${vetRate}${deliveryText}\n\n👉 *TOTAL A PAGAR: ${totalBRL}*\n\n📎 Estou enviando em anexo a foto do meu documento (CNH, RG ou RNE) para concluir meu cadastro.`;
 
       window.open(
         `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${encodeURIComponent(msg)}`,
