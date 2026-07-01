@@ -210,6 +210,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }).format(v);
   }
 
+  function formatarMsgWhatsApp(texto) {
+    // 1. Força a quebra de linha dupla (\r\n) que o app Desktop entende
+    const textoComCRLF = texto.replace(/\r?\n/g, "\r\n");
+
+    // 2. Retorna o texto codificado de forma segura
+    return encodeURIComponent(textoComCRLF);
+  }
+
   // Geradores de HTML (Bandeiras)
   function getFlagElement(currencyCode) {
     const countryMap = {
@@ -268,9 +276,14 @@ document.addEventListener("DOMContentLoaded", () => {
       : "";
   }
 
+  // function getWhatsAppLinkForExotic(currencyCode, amount, operator) {
+  //   const msg = `Olá, M&A Consultoria Câmbio! Tenho interesse na moeda exótica *${currencyCode}*.\nQuantidade: *${amount}*.\n\nPor favor, me ajude com a cotação.`;
+  //   return `https://api.whatsapp.com/send?phone=${operator}&text=${encodeURIComponent(msg)}`;
+  // }
   function getWhatsAppLinkForExotic(currencyCode, amount, operator) {
     const msg = `Olá, M&A Consultoria Câmbio! Tenho interesse na moeda exótica *${currencyCode}*.\nQuantidade: *${amount}*.\n\nPor favor, me ajude com a cotação.`;
-    return `https://api.whatsapp.com/send?phone=${operator}&text=${encodeURIComponent(msg)}`;
+    // Aplicando a blindagem aqui:
+    return `https://api.whatsapp.com/send?phone=${operator}&text=${formatarMsgWhatsApp(msg)}`;
   }
 
   // --- FETCH DE DADOS (GOOGLE SHEETS) ---
@@ -858,6 +871,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const selectedOperator = OPERATORS[randomIndex];
 
         // --- MENSAGEM DETALHADA AQUI ---
+        //         const msg = `Olá, M&A Consultoria Câmbio! Realizei uma simulação de moeda exótica no site:
+
+        // *MOEDA:* ${currencyCode} (${currencyName})
+        // *QUANTIDADE:* ${amount}
+
+        // *DETALHES DA ESTIMATIVA:*
+        // 📉 Cotação Base: R$ ${formattedBase}
+        // 💸 IOF: ${formattedIOF}
+        // 📊 VET Final: R$ ${formattedVET}
+
+        // *💰 TOTAL A PAGAR: ${formattedTotal}*
+
+        // Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.`;
+
+        //         window.open(
+        //           `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${encodeURIComponent(msg)}`,
+        //           "_blank",
+        //         );
         const msg = `Olá, M&A Consultoria Câmbio! Realizei uma simulação de moeda exótica no site:
           
 *MOEDA:* ${currencyCode} (${currencyName})
@@ -873,7 +904,7 @@ document.addEventListener("DOMContentLoaded", () => {
 Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.`;
 
         window.open(
-          `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${encodeURIComponent(msg)}`,
+          `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${formatarMsgWhatsApp(msg)}`,
           "_blank",
         );
         setTimeout(() => window.location.reload(), 2000);
@@ -1395,10 +1426,16 @@ Gostaria de confirmar a taxa exata e a disponibilidade para fechar a operação.
       }
 
       // 3. Monta a mensagem final
+      // const msg = `Olá, M&A Consultoria Câmbio! 😊\n\nMeu nome é *${name}* (CPF *${client_cpf}*).\n\nAcabei de enviar meus dados pelo *Site Conversor* e gostaria de prosseguir com a seguinte operação:\n\n• *Modalidade:* ${modeText}\n• *Moeda:* ${currentQuote.amount} ${currentQuote.currencyCode}\n• *VET Final (com IOF):* R$ ${vetRate}${deliveryText}\n\n👉 *TOTAL A PAGAR: ${totalBRL}*\n\n📎 Estou enviando em anexo a foto do meu documento (CNH, RG ou RNE) para concluir meu cadastro.`;
+
+      // window.open(
+      //   `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${encodeURIComponent(msg)}`,
+      //   "_blank",
+      // );
       const msg = `Olá, M&A Consultoria Câmbio! 😊\n\nMeu nome é *${name}* (CPF *${client_cpf}*).\n\nAcabei de enviar meus dados pelo *Site Conversor* e gostaria de prosseguir com a seguinte operação:\n\n• *Modalidade:* ${modeText}\n• *Moeda:* ${currentQuote.amount} ${currentQuote.currencyCode}\n• *VET Final (com IOF):* R$ ${vetRate}${deliveryText}\n\n👉 *TOTAL A PAGAR: ${totalBRL}*\n\n📎 Estou enviando em anexo a foto do meu documento (CNH, RG ou RNE) para concluir meu cadastro.`;
 
       window.open(
-        `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${encodeURIComponent(msg)}`,
+        `https://api.whatsapp.com/send?phone=${OPERATORS[randomIndex]}&text=${formatarMsgWhatsApp(msg)}`,
         "_blank",
       );
       setTimeout(() => window.location.reload(), 1000);
